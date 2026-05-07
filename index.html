@@ -1,0 +1,2158 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tatabahasa X-PRO: Central Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;900&family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-purple: #bc13fe;
+            --neon-green: #39ff14;
+            --neon-yellow: #fff200;
+            --neon-red: #ff3131;
+            --dark-bg: #0a0a0c;
+            --card-bg: #16161a;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+        .shake { animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both; }
+
+        @keyframes shake-error {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        .wrong-reveal {
+            border-color: var(--neon-red) !important;
+            color: var(--neon-red) !important;
+            box-shadow: 0 0 15px var(--neon-red) !important;
+            background: rgba(255, 49, 49, 0.2) !important;
+            animation: shake-error 0.4s ease-in-out;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--dark-bg);
+            color: white;
+            margin: 0;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        nav {
+            padding: 15px 30px;
+            background: rgba(0,0,0,0.9);
+            border-bottom: 2px solid var(--neon-blue);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
+        }
+
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; width: 100%; box-sizing: border-box; }
+.container { max-width: 1200px; margin: 30px auto; padding: 0 20px; width: 100%; box-sizing: border-box; opacity: 1; transition: opacity 0.5s; }
+
+        .main-hub {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .hub-card {
+            background: var(--card-bg);
+            border: 1px solid #333;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hub-card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 5px; }
+        .card-pelajar::before { background: var(--neon-blue); }
+        .card-ujian::before { background: var(--neon-red); }
+        .card-guru::before { background: var(--neon-purple); }
+        .card-setting::before { background: var(--neon-green); }
+
+        .hub-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border-color: var(--neon-blue);
+        }
+
+        .hub-card h2 { font-family: 'Orbitron'; margin-top: 20px; }
+
+        .section { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .btn-back {
+            background: transparent;
+            border: 1px solid #444;
+            color: #888;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .btn-back:hover { color: white; border-color: white; }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .topic-card {
+            background: var(--glass);
+            border: 1px solid #333;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .teacher-topic-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .topic-opt {
+            padding: 15px;
+            background: #222;
+            border: 1px solid #444;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: center;
+            font-weight: bold;
+            transition: 0.3s;
+            color: #aaa;
+        }
+
+        .topic-opt.selected {
+            background: rgba(0, 242, 255, 0.15);
+            border-color: var(--neon-blue);
+            color: var(--neon-blue);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
+            transform: scale(1.02);
+        }
+
+        .word-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin: 20px 0; }
+        
+        .word-box { 
+            padding: 15px; 
+            background: #222; 
+            border: 1px solid #444; 
+            border-radius: 8px; 
+            text-align: center; 
+            cursor: pointer; 
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        
+        .selected { 
+            border-color: var(--neon-yellow); 
+            color: var(--neon-yellow); 
+            box-shadow: 0 0 15px var(--neon-yellow); 
+            transform: scale(1.05);
+            background: rgba(255, 242, 0, 0.1);
+        }
+
+        .correct-reveal {
+            border-color: var(--neon-green) !important;
+            color: var(--neon-green) !important;
+            box-shadow: 0 0 10px var(--neon-green) !important;
+        }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9rem; }
+        th, td { padding: 12px; border-bottom: 1px solid #333; text-align: left; }
+        th { color: var(--neon-blue); background: rgba(0,0,0,0.3); }
+        
+        input { padding: 12px; background: #000; border: 1px solid #333; color: white; border-radius: 8px; margin: 5px 0; width: 100%; box-sizing: border-box;}
+
+        .timer-box {
+            font-family: 'Orbitron';
+            font-size: 2rem;
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            margin: 10px 0;
+            background: rgba(255,0,0,0.1);
+            display: inline-block;
+            padding: 5px 20px;
+            border-radius: 10px;
+            border: 1px solid var(--neon-red);
+        }
+
+        .typing-area {
+            background: #111;
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--neon-blue);
+            margin-bottom: 20px;
+            position: relative;
+            min-height: 100px;
+            cursor: text;
+        }
+        .text-display {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            letter-spacing: 1px;
+            color: #444; 
+            margin-bottom: 20px;
+            text-align: left;
+            user-select: none;
+            white-space: pre-wrap;
+        }
+        .char-correct { color: var(--neon-green); text-shadow: 0 0 8px var(--neon-green); }
+        .char-wrong { color: var(--neon-red); background: rgba(255, 49, 49, 0.2); }
+        .char-current { border-bottom: 3px solid var(--neon-blue); animation: blink 0.8s infinite; }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        #typing-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .btn-submit-typing {
+            width: 100%;
+            padding: 20px;
+            background: var(--neon-blue);
+            color: black;
+            border: none;
+            border-radius: 10px;
+            font-weight: 900;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-submit-typing:hover {
+            box-shadow: 0 0 20px var(--neon-blue);
+            transform: scale(1.02);
+        }
+
+        .feedback-overlay {
+            margin: 10px 0;
+            padding: 10px;
+            background: rgba(255, 49, 49, 0.1);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .test-config-item {
+            background: #222;
+            padding: 15px;
+            margin: 8px 0;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 5px solid var(--neon-yellow);
+        }
+
+        .rank-badge {
+            background: linear-gradient(45deg, var(--neon-purple), var(--neon-blue));
+            padding: 2px 8px;
+            border-radius: 5px;
+            font-size: 0.7rem;
+            margin-left: 5px;
+            font-weight: 900;
+        }
+
+        .config-label {
+            font-size: 0.8rem;
+            color: var(--neon-yellow);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .btn-danger {
+            background: var(--neon-red);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .skill-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .skill-btn {
+            background: #222;
+            border: 2px solid #444;
+            color: #888;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Orbitron';
+            font-size: 0.7rem;
+            flex: 1;
+            transition: 0.3s;
+        }
+        .skill-btn:not(:disabled):hover {
+            border-color: var(--neon-yellow);
+            color: white;
+            box-shadow: 0 0 10px var(--neon-yellow);
+        }
+        .skill-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #111;
+        }
+        .skill-active {
+            border-color: var(--neon-blue) !important;
+            color: var(--neon-blue) !important;
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* ========== MOD CARIAN KATA DALAM AYAT ========== */
+        .long-ayat-container {
+            background: #0a0a0f;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 1px solid var(--neon-blue);
+        }
+        .long-ayat-text {
+            font-size: 1.3rem;
+            line-height: 1.8;
+            letter-spacing: 0.5px;
+            text-align: justify;
+            background: #111;
+            padding: 25px;
+            border-radius: 12px;
+            color: #ccc;
+            user-select: none;
+        }
+        .long-ayat-text span {
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 2px 4px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .long-ayat-text span:hover {
+            background: rgba(0, 242, 255, 0.2);
+            transform: scale(1.02);
+        }
+        .word-selected {
+            background: rgba(255, 242, 0, 0.3) !important;
+            border-bottom: 2px solid var(--neon-yellow);
+            box-shadow: 0 0 8px var(--neon-yellow);
+        }
+        .word-correct-result {
+            background: rgba(57, 255, 20, 0.3) !important;
+            border-bottom: 2px solid var(--neon-green);
+        }
+        .word-wrong-result {
+            background: rgba(255, 49, 49, 0.3) !important;
+            border-bottom: 2px solid var(--neon-red);
+            text-decoration: line-through;
+        }
+        .word-missed-result {
+            background: rgba(255, 165, 0, 0.3) !important;
+            border-bottom: 2px solid orange;
+        }
+        .search-stats {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin: 15px 0;
+            font-family: 'Orbitron';
+        }
+        .stat-box {
+            background: #222;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-box span:first-child {
+            color: var(--neon-yellow);
+            font-size: 0.8rem;
+        }
+        .stat-box span:last-child {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--neon-blue);
+        }
+        .search-feedback {
+            margin: 15px 0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .search-feedback.show {
+            display: block;
+        }
+        .search-feedback.success {
+            background: rgba(57, 255, 20, 0.2);
+            border: 1px solid var(--neon-green);
+            color: var(--neon-green);
+        }
+        .search-feedback.error {
+            background: rgba(255, 49, 49, 0.2);
+            border: 1px solid var(--neon-red);
+            color: var(--neon-red);
+        }
+        .btn-search {
+            background: var(--neon-purple);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: bold;
+            font-family: 'Orbitron';
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+            transition: 0.3s;
+        }
+        .btn-search:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 15px var(--neon-purple);
+        }
+        .btn-reset-search {
+            background: #333;
+            margin-top: 10px;
+        }
+        .btn-reset-search:hover {
+            background: #555;
+        }
+/* Login Tabs */
+.login-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+.login-tab {
+    flex: 1;
+    background: #222;
+    border: none;
+    color: #888;
+    padding: 12px;
+    cursor: pointer;
+    font-family: 'Orbitron';
+    font-weight: bold;
+    transition: 0.3s;
+    border-radius: 8px 8px 0 0;
+}
+.login-tab.active {
+    background: var(--neon-blue);
+    color: black;
+    box-shadow: 0 -2px 10px rgba(0,242,255,0.3);
+}
+.login-pane {
+    display: none;
+}
+.login-pane.active-pane {
+    display: block;
+    animation: fadeIn 0.3s;
+}
+.error-msg {
+    color: var(--neon-red);
+    font-size: 0.8rem;
+    margin-top: 5px;
+    display: none;
+}
+/* Login Dashboard */
+.login-dashboard {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0a0c, #0d0d1a);
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+    transition: all 0.5s ease;
+}
+/* BUANG atau KOMEN baris .login-dashboard.hide */
+/* .login-dashboard.hide {
+    display: none;
+} */
+.dashboard-card {
+    background: rgba(22, 22, 26, 0.95);
+    border: 2px solid var(--neon-blue);
+    border-radius: 40px;
+    padding: 50px;
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 0 50px rgba(0, 242, 255, 0.3);
+    animation: fadeInUp 0.6s ease;
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+.dashboard-card h1 {
+    font-family: 'Orbitron';
+    font-size: 2rem;
+    color: var(--neon-blue);
+    margin-bottom: 10px;
+}
+.dashboard-card .subtitle {
+    color: #888;
+    margin-bottom: 40px;
+}
+.dashboard-buttons {
+    display: flex;
+    gap: 30px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.dash-btn {
+    padding: 20px 40px;
+    border-radius: 20px;
+    font-family: 'Orbitron';
+    font-weight: bold;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: none;
+    min-width: 180px;
+}
+.dash-btn.student {
+    background: linear-gradient(135deg, #00f2ff, #0088aa);
+    color: white;
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.5);
+}
+.dash-btn.teacher {
+    background: linear-gradient(135deg, #bc13fe, #6a0dad);
+    color: white;
+    box-shadow: 0 0 20px rgba(188, 19, 254, 0.5);
+}
+.dash-btn:hover {
+    transform: translateY(-5px) scale(1.02);
+}
+.dash-btn.student:hover {
+    box-shadow: 0 0 35px rgba(0, 242, 255, 0.8);
+}
+.dash-btn.teacher:hover {
+    box-shadow: 0 0 35px rgba(188, 19, 254, 0.8);
+}
+/* Teacher Login Popup Styles */
+#teacher-login-popup input {
+    background: #000 !important;
+    border: 1px solid #333 !important;
+    color: white !important;
+    padding: 15px !important;
+    border-radius: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+#teacher-login-popup button {
+    cursor: pointer;
+    transition: 0.3s;
+}
+#teacher-login-popup button:hover {
+    transform: scale(1.02);
+}
+
+    </style>
+</head>
+<body>
+
+<nav>
+    <div style="font-family: 'Orbitron'; font-weight: 900; font-size: 1.5rem; color: var(--neon-blue); cursor:pointer" onclick="goHome()">TATABAHASA X-PRO</div>
+    <div id="stats-header" style="display:none;">
+        EJEN: <span id="current-ejen-name">---</span> 
+        <span id="rank-display" class="rank-badge">RECRUIT</span> | 
+        <span id="mode-text">LATIHAN</span> | 
+        <span id="user-role-badge" style="background: var(--neon-purple); padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; margin-left: 5px;">PELAJAR</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="toggleMusic()" style="background:#222; border:1px solid var(--neon-purple); color:white; border-radius:50px; width:40px; height:40px; cursor:pointer; font-size:1.2rem;">🎵</button>
+        <button onclick="toggleSound()" style="background:#222; border:1px solid var(--neon-green); color:white; border-radius:50px; width:40px; height:40px; cursor:pointer; font-size:1.2rem;">🔊</button>
+        <button id="btn-logout" onclick="logoutSystem()" style="background:#333; border:1px solid var(--neon-red); color:var(--neon-red); border-radius:50px; width:40px; height:40px; cursor:pointer; font-size:1rem; display:none;">🚪</button>
+    </div>
+</nav>
+<!-- DASHBOARD LOGIN KHAS -->
+<div id="login-dashboard" class="login-dashboard">
+    <div class="dashboard-card">
+        <h1>⚡ TATABAHASA X-PRO ⚡</h1>
+        <div class="subtitle">Sistem Latihan & Ujian Tatabahasa Interaktif</div>
+        
+        <div class="dashboard-buttons">
+            <button class="dash-btn student" onclick="selectUserType('student')">
+                👨‍🎓 <strong>PELAJAR</strong><br>
+                <small style="font-size:0.7rem;">Akses Latihan & Ujian</small>
+            </button>
+            <button class="dash-btn teacher" onclick="selectUserType('teacher')">
+                👨‍🏫 <strong>GURU</strong><br>
+                <small style="font-size:0.7rem;">Akses Penuh Sistem</small>
+            </button>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 0.7rem; color: #555;">
+            Sistem Tatabahasa X-PRO | Versi 2.0
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <div id="section-home" class="section active">
+        <h1 style="font-family: 'Orbitron'; text-align:center; color: var(--neon-blue);">SISTEM OPERASI PUSAT</h1>
+        <div class="main-hub">
+            <div class="hub-card card-pelajar" onclick="startSession('latihan')">
+                <div style="font-size: 4rem;">📖</div>
+                <h2>MOD LATIHAN</h2>
+                <p>Eksplorasi kendiri & pengukuhan tatabahasa.</p>
+            </div>
+            <div class="hub-card card-ujian" onclick="startSession('ujian')">
+                <div style="font-size: 4rem;">⚡</div>
+                <h2>MOD UJIAN</h2>
+                <p>Misi khas ditetapkan Guru. Masa terhad!</p>
+            </div>
+                        <div class="hub-card card-guru" onclick="if(window.currentUserRole === 'guru') showSection('guru'); else alert('⛔ Akses ditolak! Mod Guru hanya untuk HAQHENSEM. Sila login sebagai guru.')">
+                <div style="font-size: 4rem;">👨‍🏫</div>
+                <h2>MOD GURU</h2>
+                <p>Pantau data & kawal penetapan ujian.</p>
+            </div>
+                       <div class="hub-card card-setting" onclick="if(window.currentUserRole === 'guru') showSection('setting'); else alert('⛔ Akses ditolak! Tetapan hanya untuk guru. Sila login sebagai guru.')">
+                <div style="font-size: 4rem;">⚙️</div>
+                <h2>TETAPAN</h2>
+                <p>Urus sistem & reset data.</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-setting" class="section">
+        <button class="btn-back" onclick="goHome()">⬅️ BALIK KE PUSAT</button>
+        <div class="hub-card" style="text-align:left;">
+            <h2 style="color: var(--neon-green);">⚙️ TETAPAN SISTEM</h2>
+            <p>Uruskan pangkalan data lokal dan tetapan aplikasi anda.</p>
+            
+            <div style="margin-top: 30px;">
+                <h3 style="color: var(--neon-red);">BAHAGIAN BAHAYA</h3>
+                <p>Tindakan di bawah tidak boleh diundur.</p>
+                <button class="btn-danger" onclick="resetLeaderboard()">KOSONGKAN REKOD SKOR (LEADERBOARD)</button>
+                <button class="btn-danger" onclick="resetAllData()" style="background: #550000; margin-top: 15px;">RESET KESELURUHAN SISTEM (PABRIK)</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-guru" class="section">
+        <button class="btn-back" onclick="goHome()">⬅️ BALIK KE PUSAT</button>
+        
+        <div class="hub-card" style="text-align:left; margin-bottom: 20px; border-color: var(--neon-blue);">
+            <h2 style="color: var(--neon-blue);">PENGATURAN MOD LATIHAN</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px;">
+                <div>
+                    <label class="config-label">Masa Klik Latihan (Saat):</label>
+                    <input type="number" id="set-practice-game-time" value="30">
+                </div>
+                <div>
+                    <label class="config-label">Masa Menaip Latihan (Saat):</label>
+                    <input type="number" id="set-practice-typing-time" value="45">
+                </div>
+            </div>
+            <button onclick="savePracticeSettings()" style="margin-top:15px; background: var(--neon-blue); color:black; border:none; padding:12px; cursor:pointer; width:100%; font-weight:bold; font-family:'Orbitron';">SIMPAN TETAPAN LATIHAN</button>
+        </div>
+
+        <div class="hub-card" style="text-align:left; margin: 20px 0;">
+            <h2 style="color: var(--neon-red);">PENETAPAN MULTI-UJIAN</h2>
+            <div id="teacher-topic-list" class="teacher-topic-selector"></div>
+            
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:15px; margin-top:10px;">
+                <div>
+                    <label class="config-label">Masa Klik Jawapan (Saat):</label>
+                    <input type="number" id="set-test-time" value="30">
+                </div>
+                <div>
+                    <label class="config-label">Masa Menaip (Saat):</label>
+                    <input type="number" id="set-typing-time" value="45" style="border-color: var(--neon-blue);">
+                </div>
+                <div>
+                    <label class="config-label">Kunci Aktivasi:</label>
+                    <input type="text" id="set-test-pass" placeholder="Cth: BM1" style="border-color: var(--neon-yellow);">
+                </div>
+                <div>
+                    <label class="config-label">Combat Skill:</label>
+                    <select id="set-allow-skills" style="width:100%; padding:10px; background:black; color:white; border:1px solid #333;">
+                        <option value="yes">BENARKAN</option>
+                        <option value="no">SEKAT</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="saveTestSettings()" style="margin-top:20px; background: var(--neon-red); color:white; border:none; padding:15px; cursor:pointer; width:100%; font-weight:bold; font-family:'Orbitron';">AKTIFKAN SET UJIAN INI</button>
+            <h3 style="margin-top:30px; border-bottom: 1px solid #333; padding-bottom:10px;">UJIAN AKTIF</h3>
+            <div id="active-test-list"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+            <div class="hub-card" style="text-align:left;">
+                <h2 style="color: var(--neon-yellow);">🏆 LEADERBOARD</h2>
+                <table id="leaderboard-table">
+                    <thead><tr><th>RANK</th><th>EJEN</th><th>SKOR</th></tr></thead>
+                    <tbody id="leaderboard-body"></tbody>
+                </table>
+            </div>
+            <div class="hub-card" style="text-align:left;">
+                <h2 style="color: var(--neon-red);">⚠️ ANALISIS</h2>
+                <div id="analysis-list"></div>
+            </div>
+        </div>
+    </div>
+
+           <div id="section-login" class="section">
+        <button class="btn-back" onclick="goHome()">⬅️ BALIK KE PUSAT</button>
+        <div class="hub-card">
+            <h2 id="login-title">AKTIVASI IDENTITI</h2>
+            
+            <div class="login-tabs">
+                <button class="login-tab active" onclick="switchLoginTab('student')">👨‍🎓 PELAJAR</button>
+                <button class="login-tab" onclick="switchLoginTab('teacher')">👨‍🏫 GURU</button>
+            </div>
+            
+            <!-- Panel Pelajar -->
+            <div id="student-pane" class="login-pane active-pane">
+                <input type="text" id="student-name" placeholder="Masukkan Nama Anda">
+                <div class="error-msg" id="student-error"></div>
+                <br><br>
+                <button onclick="loginAsStudent()" style="padding: 15px 40px; background: var(--neon-blue); border:none; font-weight:bold; cursor:pointer; width:100%;">MULAKAN SESI PELAJAR</button>
+            </div>
+            
+            <!-- Panel Guru -->
+            <div id="teacher-pane" class="login-pane">
+                <input type="text" id="teacher-username" placeholder="Nama Pengguna">
+                <input type="password" id="teacher-password" placeholder="Kata Laluan">
+                <div class="error-msg" id="teacher-error"></div>
+                <br><br>
+                <button onclick="loginAsTeacher()" style="padding: 15px 40px; background: var(--neon-purple); border:none; font-weight:bold; cursor:pointer; width:100%;">LOG MASUK SEBAGAI GURU</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="section-pelajar-main" class="section">
+        <button class="btn-back" onclick="goHome()">⬅️ LOG KELUAR</button>
+        <h2 id="pelajar-main-title">MODUL TERSEDIA</h2>
+        <div class="topic-grid" id="topic-list"></div>
+    </div>
+
+    <div id="section-quiz" class="section">
+        <div class="hub-card" id="quiz-container">
+            <div id="quiz-flow-verifikasi">
+                <h2 style="color: var(--neon-yellow);">PENGESAHAN TEORI</h2>
+                <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:10px; margin:20px 0;">
+                    <p id="verif-statement" style="font-size:1.4rem; font-weight:bold;"></p>
+                </div>
+                <button class="btn-verif btn-true" onclick="checkVerification(true)" style="color:var(--neon-green); border:2px solid; padding:10px 30px; background:none; cursor:pointer;">BETUL</button>
+                <button class="btn-verif btn-false" onclick="checkVerification(false)" style="color:var(--neon-red); border:2px solid; padding:10px 30px; background:none; cursor:pointer;">SALAH</button>
+            </div>
+
+            <div id="quiz-flow-game" style="display:none;">
+                <div id="skill-box" class="skill-container">
+                    <button class="skill-btn" id="skill-atk" onclick="useSkill('atk')">⚔️ ATK (+10s)</button>
+                    <button class="skill-btn" id="skill-def" onclick="useSkill('def')">🛡️ DEF (HINT)</button>
+                    <button class="skill-btn" id="skill-bomb" onclick="useSkill('bomb')">💣 BOMB (-2)</button>
+                    <button class="skill-btn" id="skill-x2" onclick="useSkill('x2')">🔥 X2 SCORE</button>
+                </div>
+                <div class="timer-box" id="timer-display-game">00:00</div>
+                <h2 id="quiz-title">---</h2>
+                <div id="game-feedback" class="feedback-overlay"></div>
+                <div class="word-grid" id="word-grid"></div>
+                <button id="btn-submit" onclick="processSelection()" style="width:100%; padding:20px; background:var(--neon-purple); border:none; color:white; font-weight:bold; cursor:pointer;">PENGESAHAN</button>
+            </div>
+
+                        <div id="quiz-flow-typing" style="display:none;">
+                <h2 style="color: var(--neon-blue);">PENGUKUHAN MEMORI (TAIP SEMUA)</h2>
+                <div class="timer-box" id="timer-display-typing">00:00</div>
+                <div class="typing-area" onclick="focusTyping()">
+                    <div id="typing-display" class="text-display"></div>
+                    <input type="text" id="typing-input" autocomplete="off" spellcheck="false" style="width:100%; padding:12px; background:#000; color:white; border:1px solid var(--neon-blue); border-radius:8px; margin-top:15px;">
+                </div>
+                <button id="btn-done-typing" class="btn-submit-typing" onclick="finishQuizWithScore(false)">Selesai Menaip & Hantar</button>
+                <p style="color: #666; font-size: 0.8rem; margin-top: 10px;">Tip: Taip terus dalam kotak di bawah.</p>
+            </div>
+
+            <div id="quiz-flow-result" style="display:none;">
+                <h1 id="score-text">0/0</h1>
+                <button id="btn-next-mission" onclick="nextTestTopic()" style="display:none; padding:15px; background:var(--neon-green); width:100%; margin-bottom:10px;">TERUSKAN ➡️</button>
+                <button onclick="exitQuiz()" style="padding:10px; background:#333; color:white; width:100%;">KEMBALI</button>
+            </div>
+                       <!-- MOD CARIAN KATA DALAM AYAT PANJANG -->
+            <div id="quiz-flow-search" style="display:none;">
+                <h2 style="color: var(--neon-yellow);">🔍 CARIAN KATA DALAM AYAT</h2>
+                <p style="text-align:center; margin-bottom:10px;">Klik pada perkataan yang termasuk dalam <strong id="search-topic-name"></strong></p>
+                
+                <div class="long-ayat-container">
+                    <div id="long-ayat-text" class="long-ayat-text"></div>
+                </div>
+                
+                <div class="search-stats">
+                    <div class="stat-box">
+                        <span>📌 DIPILIH</span><br>
+                        <span id="selected-count">0</span>
+                    </div>
+                    <div class="stat-box">
+                        <span>✅ JUMLAH BETUL</span><br>
+                        <span id="total-correct-count">0</span>
+                    </div>
+                </div>
+                
+                <div id="search-feedback" class="search-feedback"></div>
+                
+                <button id="btn-submit-search" class="btn-search">📤 HANTAR JAWAPAN</button>
+                <button id="btn-reset-search" class="btn-search btn-reset-search">🔄 RESET PILIHAN</button>
+                <button id="btn-exit-search" class="btn-search btn-reset-search" style="background:#555;">⬅️ KEMBALI</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore-compat.js"></script>
+<script>
+        // ======================== SISTEM BUNYI & MUZIK ========================
+    let bgMusicContext = null;
+    let bgOscillator = null;
+    let bgGain = null;
+    let isMusicPlaying = false;
+    let soundEnabled = true;
+
+    function initAudio() {
+        try {
+            bgMusicContext = new (window.AudioContext || window.webkitAudioContext)();
+            bgGain = bgMusicContext.createGain();
+            bgGain.gain.value = 0.15;
+            bgGain.connect(bgMusicContext.destination);
+            console.log("Audio sedia");
+        } catch(e) { console.log("Audio tidak disokong"); }
+    }
+
+    function playBeep(frequency, duration, volume = 0.3) {
+        if(!soundEnabled) return;
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.value = frequency;
+            gain.gain.value = volume;
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            gain.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + duration);
+            osc.stop(ctx.currentTime + duration);
+        } catch(e) { console.log("Bunyi gagal"); }
+    }
+
+    function playSound(type) {
+        if(!soundEnabled) return;
+        try {
+            switch(type) {
+                case 'correct':
+                    playBeep(880, 0.2, 0.3);
+                    break;
+                case 'wrong':
+                    playBeep(220, 0.3, 0.4);
+                    break;
+                case 'click':
+                    playBeep(660, 0.1, 0.2);
+                    break;
+                case 'complete':
+                    playBeep(523.25, 0.15, 0.3);
+                    setTimeout(() => playBeep(659.25, 0.15, 0.3), 150);
+                    setTimeout(() => playBeep(783.99, 0.3, 0.3), 300);
+                    break;
+            }
+        } catch(e) {}
+    }
+
+    let bgMusic = null;
+
+    function toggleMusic() {
+        if(!bgMusic) {
+            bgMusic = new Audio('https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3');
+            bgMusic.loop = true;
+            bgMusic.volume = 0.3;
+        }
+        if(bgMusic.paused) {
+            bgMusic.play();
+            alert("Muzik latar DIHIDUPKAN");
+        } else {
+            bgMusic.pause();
+            alert("Muzik latar DIMATIKAN");
+        }
+    }
+
+    function toggleSound() {
+        soundEnabled = !soundEnabled;
+        if(soundEnabled) playBeep(880, 0.1, 0.2);
+        alert(soundEnabled ? "Bunyi efek DIHIDUPKAN" : "Bunyi efek DIMATIKAN");
+    }
+
+    // ======================== SISTEM MARKAH MOD UJIAN ========================
+    let testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
+    let typingStartTime = null;
+    let maxTypingTime = 0;
+
+    function resetTestScore() {
+        testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
+    }
+    
+    const db = {
+        "Kata Sendi Nama": { statement: "Kata sendi nama ialah perkataan yang letaknya di hadapan kata nama atau frasa nama.", ans: true, count: 13, correct: ["di","ke","dari","daripada","kepada","pada","bagi","demi","tentang","seperti","bagai","umpama","laksana"], wrong: ["makan","dan","cantik","berlari","meja"] },
+        "Kata Hubung": { statement: "Kata hubung digunakan untuk menghubungkan ayat tunggal menjadi ayat majmuk.", ans: true, count: 8, correct: ["dan","atau","tetapi","sambil","lalu","kerana","agar","meskipun"], wrong: ["dari","meja","merah","pada","di"] },
+        "Kata Tanya": { statement: "Kata tanya digunakan untuk menanyakan sesuatu dan diakhiri dengan tanda soal.", ans: true, count: 7, correct: ["apa","siapa","mana","bila","bagaimana","mengapa","berapa"], wrong: ["wah","eh","aduh","syabas","hai"] },
+        "Kata Perintah": { statement: "Kata perintah bertujuan untuk memberikan arahan, larangan, silaan, atau permintaan.", ans: true, count: 6, correct: ["jangan","usah","sila","jemput","minta","tolong"], wrong: ["siapa","sudah","akan","sangat","boleh"] },
+        "Kata Pangkal Ayat": { statement: "Kata pangkal ayat sering digunakan dalam penulisan Bahasa Melayu Klasik.", ans: true, count: 5, correct: ["hatta","maka","alkisah","syahadan","arakian"], wrong: ["dan","dengan","tetapi","lalu","untuk"] },
+        "Kata Bantu": { statement: "Kata bantu memberikan makna tambahan pada frasa kerja, frasa adjektif, atau frasa sendi nama.", ans: true, count: 8, correct: ["akan","sudah","pernah","sedang","boleh","dapat","mesti","hendak"], wrong: ["sangat","amat","paling","ialah","adalah"] },
+        "Kata Penguat": { statement: "Kata penguat ialah perkataan yang mengikuti kata nama untuk menunjukkan bilangan.", ans: false, count: 7, correct: ["sangat","amat","paling","terlalu","agak","sekali","benar"], wrong: ["mungkin","belum","telah","harus","mampu"] },
+        "Kata Penegas": { statement: "Kata penegas seperti '-lah' and '-kah' digunakan untuk memberikan penekanan pada bahagian tertentu dalam ayat.", ans: true, count: 5, correct: ["-lah","-kah","-tah","juga","pun"], wrong: ["jika","kerana","untuk","sebagai","seperti"] },
+        "Kata Nafi": { statement: "Kata nafi 'bukan' digunakan untuk menafikan frasa nama and frasa sendi nama.", ans: true, count: 2, correct: ["tidak","bukan"], wrong: ["ya","betul","benar","pasti","sah"] },
+        "Kata Pemeri": { statement: "Kata pemeri 'ialah' diletakkan di hadapan frasa adjektif atau frasa kerja.", ans: false, count: 2, correct: ["ialah","adalah"], wrong: ["mahu","ingin","mampu","ada","mempunyai"] },
+        "Kata Pembenar": { statement: "Kata pembenar digunakan untuk mengesahkan sesuatu penyatakan.", ans: true, count: 3, correct: ["ya","benar","betul"], wrong: ["bukan","tidak","mungkin","barangkali","harap"] },
+        "Kata Arah": { statement: "Kata arah biasanya hadir sebelum frasa nama and selepas kata sendi nama.", ans: true, count: 6, correct: ["atas","bawah","dalam","luar","samping","hadapan"], wrong: ["sini","sana","situ","kini","nanti"] },
+        "Kata Bilangan": { statement: "Kata bilangan digunakan untuk menyatakan jumlah atau urutan sesuatu.", ans: true, count: 7, correct: ["dua","beberapa","seluruh","semua","setengah","para","masing-masing"], wrong: ["besar","kecil","tebal","nipis","luas"] },
+        "Kata Penekan": { statement: "Contoh kata penekan ialah perkataan '-nya'.", ans: true, count: 1, correct: ["-nya"], wrong: ["-kah","-lah","-pun","-tah","jua"] },
+        "Kata Pembenda": { statement: "Kata pembenda menukarkan perkataan yang bukan kata nama menjadi kata nama.", ans: true, count: 1, correct: ["-nya"], wrong: ["yang","untuk","oleh","bagi","tentang"] },
+        "Kata Adjektif": { 
+            statement: "Kata adjektif ialah perkataan yang menerangkan sifat atau keadaan sesuatu kata nama.", 
+            ans: true, 
+            count: 12, 
+            correct: ["cantik","besar","kecil","panas","sejuk","tinggi","rendah","baik","buruk","lama","baru","cepat"], 
+            wrong: ["rumah","buku","lari","dan","mereka"] 
+        },
+    };
+
+    const contohAyatLib = {
+        "Kata Sendi Nama": ["Ali duduk di atas kerusi itu.", "Ayah baru pulang dari pejabat.", "Buku itu ada pada abang saya."],
+        "Kata Hubung": ["Ali dan Abu bermain bola.", "Saya mahu makan tetapi nasi sudah habis.", "Adik menangis kerana lapar."],
+        "Kata Tanya": ["Siapakah nama kucing kamu?", "Apakah warna kegemaran kamu?", "Di manakah letaknya Kuala Lumpur?"],
+        "Kata Perintah": ["Jangan bermain di tepi longkang.", "Tolong tutup pintu itu.", "Sila masuk ke dalam dewan."],
+        "Kata Pangkal Ayat": ["Maka, baginda pun berangkat pergi.", "Alkisah, terdapat seorang saudagar kaya.", "Hatta, peperangan pun bermula."],
+        "Kata Bantu": ["Saya akan pergi ke sekolah esok.", "Adik sedang tidur di bilik.", "Dia pernah melawat Zoo Negara."],
+        "Kata Penguat": ["Rumah itu sangat besar.", "Pemandangan di sini amat indah.", "Budak itu paling pandai di kelas."],
+        "Kata Penegas": ["Dialah yang mencuri pen saya.", "Apatah lagi yang kamu mahukan?", "Saya pun ingin pergi juga."],
+        "Kata Nafi": ["Saya tidak mahu makan.", "Ini bukan buku saya.", "Dia tidak datang ke sekolah."],
+        "Kata Pemeri": ["Nama saya ialah Ahmad.", "Keputusan itu adalah muktamad.", "Warna kegemarannya ialah biru."],
+        "Kata Pembenar": ["Ya, saya yang melakukannya.", "Benar, kata-kata kamu itu betul.", "Betul, dialah pemenangnya."],
+        "Kata Arah": ["Kucing itu tidur di bawah meja.", "Baju itu diletakkan di dalam almari.", "Dia berdiri di hadapan rumah."],
+        "Kata Bilangan": ["Dua orang murid sedang berlari.", "Semua murid diminta berkumpul.", "Beberapa buah kereta rosak."],
+        "Kata Penekan": ["Tampaknya hari akan hujan.", "Sesungguhnya dia seorang yang jujur.", "Nampaknya dia sedang sedih."],
+        "Kata Pembenda": ["Lajunya kereta itu memecah rekod.", "Sakitnya kaki saya terjatuh tadi.", "Cantiknya bunga itu mekar."],
+        "Kata Adjektif": [
+            "Rumah itu sangat besar dan cantik.",
+            "Air di dalam bekas ini masih panas.",
+            "Dia seorang yang baik hati dan jujur.",
+            "Hari ini cuaca sangat sejuk.",
+            "Kereta baru ayah berwarna merah."
+        ],
+    };
+    
+    // ========== AYAT PANJANG UNTUK MOD CARIAN ==========
+    const longAyatLib = {
+        "Kata Sendi Nama": "Pada pagi yang cerah, Ali pergi ke sekolah dengan basikal baru pemberian ayahnya. Buku teks itu jatuh dari meja ke lantai yang keras. Ibu membeli hadiah untuk adik di pasar raya besar. Kami duduk di atas sofa sambil menonton televisyen. Surat itu dikirim kepada nenek di kampung. Mereka berlari ke arah sungai untuk mandi. Pensel warna itu sesuai untuk melukis pemandangan.",
+        
+        "Kata Hubung": "Ali dan Abu bermain bola sepak di padang sekolah, tetapi hujan turun dengan lebat lalu mereka berlindung di bawah pokok besar kerana takut basah dan disambar petir. Walaupun badan sudah sejuk, mereka tetap gembira kerana dapat bermain bersama. Adik menangis kerana lapar, lalu ibu segera menyediakan makanan untuknya.",
+        
+        "Kata Tanya": "Siapakah nama budak kecil yang menangis di tepi jalan itu? Apakah warna kegemaran kamu semua di dalam kelas ini? Di manakah letaknya pejabat pos baharu yang dibina oleh kerajaan di bandar ini? Bilakah kita akan pergi bercuti ke Pulau Langkawi? Berapakah harga baju batik yang cantik itu? Mengapa awak tidak hadir ke sekolah semalam? Bagaimana cara untuk menyelesaikan masalah ini?",
+        
+        "Kata Perintah": "Jangan buka pintu itu sebelum saya datang nanti kerana ada sesuatu yang berbahaya di dalam bilik. Tolong hentikan kereta di tepi jalan raya itu kerana ada kemalangan di hadapan. Sila duduk dengan tenang dan aman semasa guru sedang mengajar di dalam kelas. Usah membuat bising ketika orang sedang tidur nyenyak. Jemput masuk tetamu ke dalam rumah ini. Minta tolong bawakan payung itu.",
+        
+        "Kata Pangkal Ayat": "Alkisah, terdapat seorang raja yang sangat adil dan bijaksana di sebuah negeri yang makmur. Hatta, baginda pun mengadap menteri-menteri untuk membincangkan hal ehwal negara. Maka, seluruh rakyat merasa amat gembira dengan keputusan yang dibuat. Syahadan, baginda menitahkan hulubalang untuk berperang. Arakian, maka berakhirlah riwayat baginda yang mulia itu.",
+        
+        "Kata Bantu": "Saya akan pergi ke sekolah walaupun hujan lebat turun kerana tidak mahu ketinggalan pelajaran. Adik sedang tidur dengan lena di dalam bilik setelah penat bermain seharian. Kami pernah melawat Zoo Negara tahun lepas dan sangat seronok. Mereka sudah selesai makan ketika saya tiba. Bolehkah awak membantu saya mengangkat kotak ini? Dia mesti hadir ke majlis itu nanti.",
+        
+        "Kata Penguat": "Rumah agam di atas bukit itu sangat besar, cantik, dan mewah sekali. Pemandangan di sini amat mempersonakan hati dan menenangkan jiwa. Budak itu paling pintar dan bijak dalam keseluruhan kelas. Makanan yang dimasak oleh ibu terlalu sedap sehingga habis semua. Cuaca hari ini amat panas berbanding semalam.",
+        
+        "Kata Penegas": "Dialah yang bertanggungjawab sepenuhnya terhadap kejadian ini. Apatah lagi jika kamu tidak datang ke majlis jamuan itu nanti. Saya pun turut merasa sangat sedih dengan berita duka itu. Kamu juga mesti hadir ke program ini. Lagipun, ini adalah tanggungjawab kita bersama. Sesungguhnya, kejujuran itu amat penting.",
+        
+        "Kata Nafi": "Saya tidak suka makan sayur pahit kerana rasanya sangat tidak enak. Itu bukan barang kepunyaan saya kerana warnanya berbeza sama sekali. Mereka tidak datang ke majlis hari jadi saya kerana sibuk dengan urusan lain. Kami belum makan tengah hari lagi ketika awak datang. Dia bukan anak kepada orang kaya itu.",
+        
+        "Kata Pemeri": "Nama bapa saya yang tercinta ialah Haji Ahmad bin Abdullah. Keputusan mahkamah yang diumumkan semalam adalah muktamad dan tidak boleh dipertikaikan lagi. Warna kesukaan ibu saya yang paling disukai ialah biru laut yang tenang. Tugas kita adalah untuk membantu orang yang memerlukan. Makanan kegemaran kucing itu ialah ikan tongkol.",
+        
+        "Kata Pembenar": "Ya, saya yang memecahkan cermin tingkap itu dengan tidak sengaja semasa bermain bola. Benar, kata-kata kamu sangat tepat dan jujur tidak ada sedikit pun dusta. Betul, dialah yang menang pertandingan pidato peringkat kebangsaan itu. Ya, itu memang betul seperti yang awak katakan. Benar sekali, saya setuju dengan pendapat itu.",
+        
+        "Kata Arah": "Kucing comel yang berbulu putih itu tidur dengan selesa di bawah meja makan yang besar. Baju kotor yang sudah lama tidak dibasuh diletakkan di dalam bakul plastik itu. Dia berdiri dengan tegap di hadapan kelas sambil membaca puisi. Burung itu terbang ke atas pokok yang tinggi. Mayat itu dikebumikan di sebelah masjid.",
+        
+        "Kata Bilangan": "Dua orang murid lelaki yang berpakaian biru sedang berlari pantas di padang sekolah. Semua pelajar diwajibkan berkumpul di dewan besar untuk perhimpunan. Beberapa buah kereta rosak teruk akibat ditimpa pokok tumbang semasa ribut. Setengah daripada mereka tidak hadir ke kelas. Para guru sedang bermesyuarat di bilik guru.",
+        
+        "Kata Penekan": "Nampaknya hari ini akan hujan lebat kerana langit sudah gelap dan angin bertiup kencang. Sesungguhnya dia seorang yang jujur dan amanah dalam menjalankan tugasnya. Tampaknya projek pembangunan itu akan berjaya dengan cemerlang. Rupa-rupanya dia sudah lama menunggu di sini. Jelasnya, masalah ini perlu diselesaikan segera.",
+        
+        "Kata Pembenda": "Lajunya kereta lumba berwarna merah itu memecah rekod dunia yang baharu. Sakitnya kepala saya ini selepas terjatuh dari tangga semalam. Cantiknya bunga orkid pelbagai warna itu mekar berseri di taman. Tingginya bangunan pencakar langit itu sehingga menusuk awan. Busuknya bangkai ikan yang sudah beberapa hari itu.",
+        
+        "Kata Adjektif": "Rumah putih yang terletak di hujung kampung itu sangat besar, cantik, dan mewah sekali. Air panas yang baru dimasak di dalam teko masih mendidih dan berwap. Dia seorang pemuda yang baik hati, jujur, dan sangat bertanggungjawab. Cuaca di Cameron Highlands sangat sejuk dan nyaman pada waktu malam. Kereta baru berwarna merah milik ayah sangat laju dan canggih. Makanan ini terlalu masin untuk dimakan. Budak itu sangat pintar dan bijak dalam pelajaran."
+    };
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyAymSWoUxm-PC31KXaMi4VEIWEa7Nkl1WI",
+        authDomain: "game-2cf15.firebaseapp.com",
+        projectId: "game-2cf15",
+        storageBucket: "game-2cf15.firebasestorage.app",
+        messagingSenderId: "326225610672",
+        appId: "1:326225610672:web:05b52748e5b41492d13875",
+        measurementId: "G-G0YPSYG8H3"
+    };
+
+    let cloudDb = null;
+    let cloudReady = false;
+    let unsubscribeRecords = null;
+    let unsubscribeTests = null;
+    let unsubscribeSettings = null;
+
+    let currentUser = "";
+    let currentMode = "latihan"; 
+    let activeTopic = "";
+    let dataRecords = [];
+    let multiTestConfig = [];
+    let practiceConfig = { gameTime: 30, typingTime: 45 };
+    
+    let activeExam = null; 
+    let currentTestIdx = 0;
+    let timerInterval;
+    let timeLeft = 0;
+    let targetSentence = "";
+    let currentScore = 0;
+
+    let skillsUsed = { atk: false, def: false, bomb: false, x2: false };
+    let x2Active = false;
+    
+    // ======================== VARIABEL UNTUK MOD CARIAN ========================
+    let currentLongAyat = "";
+    let currentTopicWords = [];
+    let selectedWordIndices = new Set();
+    let wordElements = [];
+    let originalWordTexts = [];
+    let isSearchSubmitted = false;
+    let typingPointsFromMemory = 0;
+
+    // ======================== SISTEM LOGIN GURU & PELAJAR ========================
+    window.currentUserRole = "";
+    window.currentUserName = "";
+
+    function loadLocalBackup() {
+        dataRecords = JSON.parse(localStorage.getItem('xpro_records')) || [];
+        multiTestConfig = JSON.parse(localStorage.getItem('xpro_multi_test')) || [];
+        practiceConfig = JSON.parse(localStorage.getItem('xpro_practice_config')) || { gameTime: 30, typingTime: 45 };
+    }
+
+    function saveLocalBackup() {
+        localStorage.setItem('xpro_records', JSON.stringify(dataRecords));
+        localStorage.setItem('xpro_multi_test', JSON.stringify(multiTestConfig));
+        localStorage.setItem('xpro_practice_config', JSON.stringify(practiceConfig));
+    }
+
+    function applyPracticeConfigToUI() {
+        const gameInput = document.getElementById('set-practice-game-time');
+        const typingInput = document.getElementById('set-practice-typing-time');
+        if (gameInput) gameInput.value = practiceConfig.gameTime;
+        if (typingInput) typingInput.value = practiceConfig.typingTime;
+    }
+
+    function sanitizeRecord(record) {
+        return {
+            name: String(record.name || "PELAJAR"),
+            mode: String(record.mode || "latihan"),
+            topic: String(record.topic || ""),
+            score: Number(record.score || 0),
+            clickScore: Number(record.clickScore || 0),
+            typingScore: Number(record.typingScore || 0),
+            searchScore: Number(record.searchScore || 0),
+            total: Number(record.total || 0),
+            date: String(record.date || new Date().toLocaleString())
+        };
+    }
+
+    function normalizeCloudState() {
+        dataRecords = (Array.isArray(dataRecords) ? dataRecords : []).map(sanitizeRecord);
+        multiTestConfig = (Array.isArray(multiTestConfig) ? multiTestConfig : []).map(cfg => ({
+            pass: String(cfg.pass || "").trim().toUpperCase(),
+            topics: Array.isArray(cfg.topics) ? cfg.topics : [],
+            gameTime: Number(cfg.gameTime || 30),
+            typingTime: Number(cfg.typingTime || 45),
+            allowSkills: cfg.allowSkills === 'yes' ? 'yes' : 'no'
+        })).filter(cfg => cfg.pass && cfg.topics.length > 0);
+
+        practiceConfig = {
+            gameTime: Number(practiceConfig.gameTime || 30),
+            typingTime: Number(practiceConfig.typingTime || 45)
+        };
+    }
+
+    async function initCloudSync() {
+        loadLocalBackup();
+        normalizeCloudState();
+
+        try {
+            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+            cloudDb = firebase.firestore();
+
+            const refs = {
+                records: cloudDb.collection("xpro_shared").doc("records"),
+                tests: cloudDb.collection("xpro_shared").doc("tests"),
+                settings: cloudDb.collection("xpro_shared").doc("settings")
+            };
+
+            const snapshots = await Promise.all([refs.records.get(), refs.tests.get(), refs.settings.get()]);
+
+            const cloudRecords = snapshots[0].exists ? (snapshots[0].data().items || []) : [];
+            const cloudTests = snapshots[1].exists ? (snapshots[1].data().items || []) : [];
+            const cloudPractice = snapshots[2].exists ? (snapshots[2].data().practice || null) : null;
+
+            if (Array.isArray(cloudRecords) && cloudRecords.length > 0) dataRecords = cloudRecords;
+            if (Array.isArray(cloudTests) && cloudTests.length > 0) multiTestConfig = cloudTests;
+            if (cloudPractice && typeof cloudPractice === "object") practiceConfig = cloudPractice;
+
+            normalizeCloudState();
+            saveLocalBackup();
+
+            if (!snapshots[0].exists) await refs.records.set({ items: dataRecords, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            if (!snapshots[1].exists) await refs.tests.set({ items: multiTestConfig, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+            if (!snapshots[2].exists) await refs.settings.set({ practice: practiceConfig, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+
+            unsubscribeRecords = refs.records.onSnapshot((doc) => {
+                const items = doc.exists ? doc.data().items : [];
+                dataRecords = Array.isArray(items) ? items : [];
+                normalizeCloudState();
+                saveLocalBackup();
+                renderLeaderboard();
+                renderAnalysis();
+            });
+
+            unsubscribeTests = refs.tests.onSnapshot((doc) => {
+                const items = doc.exists ? doc.data().items : [];
+                multiTestConfig = Array.isArray(items) ? items : [];
+                normalizeCloudState();
+                saveLocalBackup();
+                renderActiveTests();
+            });
+
+            unsubscribeSettings = refs.settings.onSnapshot((doc) => {
+                const incoming = doc.exists ? doc.data().practice : null;
+                if (incoming && typeof incoming === "object") {
+                    practiceConfig = incoming;
+                    normalizeCloudState();
+                    saveLocalBackup();
+                    applyPracticeConfigToUI();
+                }
+            });
+
+            cloudReady = true;
+            console.log("Firebase Cloud Sync aktif.");
+        } catch (error) {
+            cloudReady = false;
+            console.error("Gagal sambung Firebase. Mod lokal digunakan.", error);
+            loadLocalBackup();
+            normalizeCloudState();
+        }
+
+        renderActiveTests();
+        renderLeaderboard();
+        renderAnalysis();
+        applyPracticeConfigToUI();
+    }
+
+    async function syncRecords() {
+        saveLocalBackup();
+        if (!cloudReady || !cloudDb) return;
+        await cloudDb.collection("xpro_shared").doc("records").set({
+            items: dataRecords,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    async function syncTests() {
+        saveLocalBackup();
+        if (!cloudReady || !cloudDb) return;
+        await cloudDb.collection("xpro_shared").doc("tests").set({
+            items: multiTestConfig,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    async function syncPracticeConfig() {
+        saveLocalBackup();
+        if (!cloudReady || !cloudDb) return;
+        await cloudDb.collection("xpro_shared").doc("settings").set({
+            practice: practiceConfig,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
+    // FUNGSI UTAMA UNTUK BUTANG PELAJAR DAN GURU
+    function selectUserType(type) {
+        const dashboard = document.getElementById('login-dashboard');
+        
+        if(type === 'student') {
+            // Sembunyikan dashboard
+            dashboard.style.display = 'none';
+            
+            // Set role pelajar dengan nama default "PELAJAR"
+            window.currentUserRole = "pelajar";
+            window.currentUserName = "PELAJAR";
+            window.currentUser = "PELAJAR";
+            
+            // Update header
+            document.getElementById('current-ejen-name').innerText = "PELAJAR";
+            document.getElementById('user-role-badge').innerHTML = "👨‍🎓 PELAJAR";
+            document.getElementById('stats-header').style.display = 'block';
+            document.getElementById('btn-logout').style.display = 'block';
+            
+            // Papar section home
+            showSection('home');
+            playSound('complete');
+        } 
+        else if(type === 'teacher') {
+            // Sembunyikan dashboard dahulu
+            dashboard.style.display = 'none';
+            // Papar popup login guru
+            showTeacherLoginPopup();
+        }
+    }
+
+    function showTeacherLoginPopup() {
+        // Buat popup login guru
+        const popup = document.createElement('div');
+        popup.id = 'teacher-login-popup';
+        popup.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(8px);
+        `;
+        popup.innerHTML = `
+            <div style="background: #16161a; border: 2px solid var(--neon-purple); border-radius: 30px; padding: 40px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 0 50px rgba(188,19,254,0.3);">
+                <h2 style="color: var(--neon-purple); font-family: 'Orbitron';">🔐 LOG MASUK GURU</h2>
+                <p style="color: #888; margin-bottom: 20px;">Sila masukkan kredential untuk mengakses Mod Guru</p>
+                <input type="text" id="teacher-login-username" placeholder="Nama Pengguna" style="width:100%; padding:15px; margin:10px 0; background:#000; border:1px solid #333; color:white; border-radius:10px;">
+                <input type="password" id="teacher-login-password" placeholder="Kata Laluan" style="width:100%; padding:15px; margin:10px 0; background:#000; border:1px solid #333; color:white; border-radius:10px;">
+                <div id="teacher-login-error" style="color:var(--neon-red); font-size:0.8rem; margin:10px 0; display:none;"></div>
+                <button onclick="processTeacherLogin()" style="background: var(--neon-purple); color:white; border:none; padding:15px 30px; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;">LOG MASUK</button>
+                <button onclick="closeTeacherLoginPopup()" style="background: #333; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; width:100%; margin-top:10px;">BATAL</button>
+            </div>
+        `;
+        document.body.appendChild(popup);
+    }
+
+    function closeTeacherLoginPopup() {
+        const popup = document.getElementById('teacher-login-popup');
+        if(popup) popup.remove();
+        // Tunjukkan semula dashboard
+        const dashboard = document.getElementById('login-dashboard');
+        dashboard.style.display = 'flex';
+    }
+
+    function processTeacherLogin() {
+        const username = document.getElementById('teacher-login-username').value.trim();
+        const password = document.getElementById('teacher-login-password').value;
+        const errorDiv = document.getElementById('teacher-login-error');
+        
+        const TEACHER_USERNAME = "HAQHENSEM";
+        const TEACHER_PASSWORD = "12345";
+        
+        if(username !== TEACHER_USERNAME) {
+            errorDiv.innerText = "❌ Nama pengguna salah!";
+            errorDiv.style.display = "block";
+            return;
+        }
+        if(password !== TEACHER_PASSWORD) {
+            errorDiv.innerText = "❌ Kata laluan salah!";
+            errorDiv.style.display = "block";
+            return;
+        }
+        
+        errorDiv.style.display = "none";
+        
+        // Tutup popup
+        const popup = document.getElementById('teacher-login-popup');
+        if(popup) popup.remove();
+        
+        // Sembunyikan dashboard
+        const dashboard = document.getElementById('login-dashboard');
+        dashboard.style.display = 'none';
+        
+        // Set role guru
+        window.currentUserRole = "guru";
+        window.currentUserName = username;
+        window.currentUser = username;
+        document.getElementById('current-ejen-name').innerText = username;
+        document.getElementById('user-role-badge').innerHTML = "👨‍🏫 GURU";
+        document.getElementById('stats-header').style.display = 'block';
+        document.getElementById('btn-logout').style.display = 'block';
+        playSound('complete');
+        
+        // Papar mod guru
+        showSection('guru');
+        renderTeacherTopics();
+        renderActiveTests();
+        renderLeaderboard();
+        renderAnalysis();
+        
+        applyPracticeConfigToUI();
+    }
+
+    // FUNGSI LOG KELUAR
+    function logoutSystem() {
+        if(confirm("Anda pasti ingin log keluar?")) {
+            // Reset semua variable
+            window.currentUserRole = "";
+            window.currentUserName = "";
+            window.currentUser = "";
+            currentMode = "latihan";
+            activeExam = null;
+            currentTestIdx = 0;
+            
+            // Hentikan timer jika sedang berjalan
+            if(timerInterval) clearInterval(timerInterval);
+            
+            // Sembunyikan stats header dan logout button
+            document.getElementById('stats-header').style.display = 'none';
+            document.getElementById('btn-logout').style.display = 'none';
+            
+            // Tunjukkan semula dashboard login
+            const dashboard = document.getElementById('login-dashboard');
+            dashboard.style.display = 'flex';
+            
+            // Reset ke section home
+            showSection('home');
+            
+            playSound('click');
+        }
+    }
+
+    // FUNGSI NAVIGASI UTAMA
+    function goHome() {
+        clearInterval(timerInterval);
+        showSection('home');
+    }
+    
+    function showSection(id) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        const targetSection = document.getElementById('section-' + id);
+        if(targetSection) targetSection.classList.add('active');
+        if(id === 'pelajar-main') renderTopics();
+        if(id === 'guru') { 
+            renderTeacherTopics(); 
+            renderActiveTests(); 
+            renderLeaderboard(); 
+            renderAnalysis(); 
+            applyPracticeConfigToUI();
+        }
+    }
+
+    // FUNGSI UNTUK MOD LATIHAN & UJIAN
+    function startSession(mode) { 
+        if(window.currentUserRole !== "pelajar") {
+            alert("⚠️ Sila login sebagai PELAJAR terlebih dahulu!");
+            return;
+        }
+        currentMode = mode; 
+        document.getElementById('mode-text').innerText = mode.toUpperCase();
+        showSection('pelajar-main');
+    }
+    
+    function renderTopics() {
+        const grid = document.getElementById('topic-list'); 
+        if(!grid) return;
+        grid.innerHTML = "";
+        for(let t in db) {
+            grid.innerHTML += `
+                <div class="topic-card" onclick="openQuiz('${t}')">
+                    <h3>${t}</h3>
+                    <small style="color:var(--neon-green);">📝 3 Latihan Berturutan</small>
+                </div>
+            `;
+        }
+    }
+
+    function openQuiz(t) {
+        activeTopic = t; 
+        x2Active = false;
+        currentScore = 0;
+        testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
+        
+        showSection('quiz');
+        document.getElementById('quiz-flow-verifikasi').style.display = 'block';
+        document.getElementById('quiz-flow-game').style.display = 'none';
+        document.getElementById('quiz-flow-typing').style.display = 'none';
+        document.getElementById('quiz-flow-search').style.display = 'none';
+        document.getElementById('quiz-flow-result').style.display = 'none';
+        document.getElementById('verif-statement').innerText = db[t].statement;
+        document.getElementById('game-feedback').style.display = 'none';
+    }
+
+    function checkVerification(ans) {
+        if(ans === db[activeTopic].ans) startPracticalGame(); 
+        else { 
+            document.getElementById('quiz-container').classList.add('shake'); 
+            setTimeout(() => document.getElementById('quiz-container').classList.remove('shake'), 400); 
+            playSound('wrong');
+        }
+    }
+
+    function startPracticalGame() {
+        document.getElementById('quiz-flow-verifikasi').style.display = 'none';
+        document.getElementById('quiz-flow-game').style.display = 'block';
+        document.getElementById('quiz-title').innerText = activeTopic;
+
+        const skillBox = document.getElementById('skill-box');
+        if(currentMode === 'ujian' && activeExam && activeExam.allowSkills === 'yes') {
+            skillBox.style.display = 'flex';
+            updateSkillButtons();
+        } else {
+            skillBox.style.display = 'none';
+        }
+
+        let time = (currentMode === 'ujian' && activeExam) ? activeExam.gameTime : practiceConfig.gameTime;
+        
+        startTimer(time, 'game');
+        generateWordGrid();
+    }
+
+    function updateSkillButtons() {
+        for(let key in skillsUsed) {
+            const btn = document.getElementById(`skill-${key}`);
+            if(btn) {
+                btn.disabled = skillsUsed[key];
+                btn.classList.remove('skill-active');
+            }
+        }
+    }
+
+    function useSkill(type) {
+        if(skillsUsed[type]) return;
+        skillsUsed[type] = true;
+        const btn = document.getElementById(`skill-${type}`);
+        if(btn) {
+            btn.disabled = true;
+            btn.classList.add('skill-active');
+        }
+
+        if(type === 'atk') {
+            timeLeft += 10;
+            updateTimerDisplay('game');
+            playSound('click');
+        } else if(type === 'def') {
+            alert(`HINT: Fokus kepada perkataan yang berkaitan dengan ${activeTopic}.`);
+            playSound('click');
+        } else if(type === 'bomb') {
+            const boxes = Array.from(document.querySelectorAll('.word-box:not(.selected)'));
+            let bombed = 0;
+            boxes.forEach(b => {
+                if(!db[activeTopic].correct.includes(b.innerText) && bombed < 2) {
+                    b.style.opacity = "0.2";
+                    b.style.pointerEvents = "none";
+                    b.innerText = "MISS";
+                    bombed++;
+                }
+            });
+            playSound('click');
+        } else if(type === 'x2') {
+            x2Active = true;
+            alert("BOOSTER AKTIF: Skor berganda jika semua betul!");
+            playSound('click');
+        }
+    }
+
+    function generateWordGrid() {
+        const grid = document.getElementById('word-grid'); 
+        if(!grid) return;
+        grid.innerHTML = "";
+        let pool = [...db[activeTopic].correct, ...db[activeTopic].wrong].sort(() => Math.random() - 0.5);
+        pool.forEach(w => {
+            const b = document.createElement('div'); 
+            b.className = "word-box"; 
+            b.innerText = w;
+            b.onclick = () => { 
+                if(!b.classList.contains('correct-reveal') && !b.classList.contains('wrong-reveal')) {
+                    b.classList.toggle('selected');
+                    playSound('click');
+                }
+            };
+            grid.appendChild(b);
+        });
+    }
+
+    function processSelection() {
+        const boxes = document.querySelectorAll('.word-box');
+        const correctAnswers = db[activeTopic].correct;
+        let selectedCorrect = 0;
+        let hasError = false;
+
+        boxes.forEach(b => {
+            const isCorrect = correctAnswers.includes(b.innerText);
+            const isSelected = b.classList.contains('selected');
+
+            if(isCorrect && isSelected) {
+                selectedCorrect++;
+                playSound('correct');
+            }
+            if(isCorrect && !isSelected) { 
+                hasError = true; 
+                b.classList.add('correct-reveal'); 
+                playSound('wrong');
+            }
+            if(!isCorrect && isSelected) { 
+                hasError = true; 
+                b.classList.remove('selected'); 
+                b.classList.add('wrong-reveal'); 
+                playSound('wrong');
+            }
+        });
+
+        const clickPoints = selectedCorrect * 10;
+        
+        if(currentMode === 'ujian') {
+            testScoreData.clickScore = clickPoints;
+        }
+        
+        currentScore = selectedCorrect;
+
+        if (hasError) {
+            const feedback = document.getElementById('game-feedback');
+            if(feedback) {
+                feedback.innerText = "RALAT DIKESAN! Terus ke latihan menaip tanpa markah klik";
+                feedback.style.display = 'block';
+                if(currentMode === 'ujian') testScoreData.clickScore = Math.max(0, testScoreData.clickScore - 5);
+            }
+            setTimeout(() => {
+                if(feedback) feedback.style.display = 'none';
+                startTypingModuleWithScore();
+            }, 2000);
+        } else {
+            startTypingModuleWithScore();
+        }
+    }
+
+    function startTimer(s, type) { 
+        clearInterval(timerInterval);
+        timeLeft = s; 
+        updateTimerDisplay(type);
+        timerInterval = setInterval(() => { 
+            timeLeft--; 
+            updateTimerDisplay(type); 
+            if(timeLeft <= 0) { 
+                clearInterval(timerInterval); 
+                if(type === 'game') {
+                    startTypingModuleWithScore();
+                } else if(type === 'typing') {
+                    finishQuizWithScore(false);
+                }
+            } 
+        }, 1000); 
+    }
+
+    function updateTimerDisplay(type) { 
+        const m = Math.floor(timeLeft/60); 
+        const s = timeLeft%60; 
+        const el = document.getElementById(`timer-display-${type}`);
+        if(el) el.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; 
+    }
+
+    function startTypingModuleWithScore() {
+        clearInterval(timerInterval);
+        document.getElementById('quiz-flow-game').style.display = 'none';
+        document.getElementById('quiz-flow-typing').style.display = 'block';
+        
+        let time = (currentMode === 'ujian' && activeExam) ? activeExam.typingTime : practiceConfig.typingTime;
+        maxTypingTime = time;
+        typingStartTime = Date.now();
+
+        startTimer(time, 'typing');
+
+        const allCorrectWords = db[activeTopic].correct.join(', ');
+        const ayatList = contohAyatLib[activeTopic] || ["Contoh ayat tidak tersedia."];
+        const randomAyat = ayatList[Math.floor(Math.random() * ayatList.length)];
+
+        targetSentence = `Contoh ${activeTopic} ialah ${allCorrectWords}.\nContoh Ayat: ${randomAyat}`;
+        
+        const display = document.getElementById('typing-display'); 
+        display.innerHTML = "";
+        let charArray = targetSentence.split("");
+        charArray.forEach((char, idx) => {
+            const span = document.createElement('span'); 
+            span.innerText = char;
+            if(idx === 0) span.className = "char-current";
+            display.appendChild(span);
+        });
+        
+        const typingInput = document.getElementById('typing-input');
+        typingInput.value = "";
+        typingInput.style.opacity = "1";
+        typingInput.style.position = "relative";
+        typingInput.style.width = "100%";
+        typingInput.style.padding = "12px";
+        typingInput.style.background = "#000";
+        typingInput.style.color = "white";
+        typingInput.style.border = "1px solid var(--neon-blue)";
+        typingInput.style.borderRadius = "8px";
+        typingInput.style.marginTop = "15px";
+        
+        typingInput.removeEventListener('input', handleTypingWithScore);
+        typingInput.addEventListener('input', handleTypingWithScore);
+        
+        setTimeout(() => typingInput.focus(), 100);
+        
+        let typingInfo = document.getElementById('typing-score-info');
+        if(typingInfo) typingInfo.remove();
+        typingInfo = document.createElement('div');
+        typingInfo.id = 'typing-score-info';
+        typingInfo.style.cssText = 'margin-top:10px; padding:8px; background:#222; border-radius:8px; color:var(--neon-yellow); font-size:0.9rem; text-align:center;';
+        typingInfo.innerHTML = `⌨️ Markah Menaip: Belum selesai | Masa: ${time}s | Bonus: 100 markah jika selesai sebelum masa tamat`;
+        document.querySelector('#quiz-flow-typing').appendChild(typingInfo);
+    }
+
+    function handleTypingWithScore(e) {
+        const val = e.target.value; 
+        const spans = document.querySelectorAll('#typing-display span');
+        for(let i = 0; i < spans.length; i++) {
+            const span = spans[i];
+            if (i < val.length) {
+                if(val[i] === targetSentence[i]) {
+                    span.className = "char-correct";
+                } else {
+                    span.className = "char-wrong";
+                }
+            } else if (i === val.length) {
+                span.className = "char-current";
+            } else {
+                span.className = "";
+            }
+        }
+
+        if (val === targetSentence) { 
+            clearInterval(timerInterval);
+            playSound('complete');
+            setTimeout(() => finishQuizWithScore(true), 300);
+        }
+    }
+
+    function finishQuizWithScore(isPerfectTyping = false) {
+        clearInterval(timerInterval);
+        
+        let typingPoints = 0;
+        const typedText = document.getElementById('typing-input').value;
+        const isTypingCorrect = (typedText === targetSentence);
+        const timeTaken = typingStartTime ? (Date.now() - typingStartTime) / 1000 : maxTypingTime;
+        const timeBonus = Math.max(0, maxTypingTime - timeTaken);
+        
+        if(currentMode === 'ujian') {
+            if(isTypingCorrect) {
+                typingPoints = 100 + Math.floor(timeBonus);
+            } else {
+                let accuracy = 0;
+                for(let i=0; i<Math.min(typedText.length, targetSentence.length); i++) {
+                    if(typedText[i] === targetSentence[i]) accuracy++;
+                }
+                const accuracyPercent = accuracy / targetSentence.length;
+                typingPoints = Math.floor(50 * accuracyPercent);
+            }
+            testScoreData.typingScore = typingPoints;
+        } else {
+            typingPoints = isTypingCorrect ? 50 : Math.floor(25 * (typedText.length / targetSentence.length));
+        }
+
+        typingPointsFromMemory = typingPoints;
+        
+        startWordSearchInline();
+    }
+
+    function startWordSearchInline() {
+        selectedWordIndices.clear();
+        isSearchSubmitted = false;
+        wordElements = [];
+        
+        currentLongAyat = longAyatLib[activeTopic] || longAyatLib["Kata Adjektif"];
+        currentTopicWords = db[activeTopic].correct;
+        
+        document.getElementById('quiz-flow-typing').style.display = 'none';
+        document.getElementById('quiz-flow-search').style.display = 'block';
+        document.getElementById('search-topic-name').innerText = activeTopic;
+        
+        renderLongAyatInline(currentLongAyat);
+        updateSearchStatsInline();
+        
+        const feedback = document.getElementById('search-feedback');
+        feedback.className = 'search-feedback';
+        feedback.style.display = 'none';
+        feedback.innerHTML = "";
+        
+        // Pasang event handlers
+        const submitBtn = document.getElementById('btn-submit-search');
+        if(submitBtn) {
+            const newSubmitBtn = submitBtn.cloneNode(true);
+            submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
+            newSubmitBtn.id = "btn-submit-search";
+            newSubmitBtn.onclick = () => submitSearchAnswerInline();
+        }
+        
+        const resetBtn = document.getElementById('btn-reset-search');
+        if(resetBtn) {
+            const newResetBtn = resetBtn.cloneNode(true);
+            resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
+            newResetBtn.id = "btn-reset-search";
+            newResetBtn.onclick = () => resetSearchSelectionInline();
+        }
+        
+        const exitBtn = document.getElementById('btn-exit-search');
+        if(exitBtn) {
+            const newExitBtn = exitBtn.cloneNode(true);
+            exitBtn.parentNode.replaceChild(newExitBtn, exitBtn);
+            newExitBtn.id = "btn-exit-search";
+            newExitBtn.onclick = () => exitQuiz();
+        }
+    }
+
+    function renderLongAyatInline(ayat) {
+        const container = document.getElementById('long-ayat-text');
+        if(!container) return;
+        container.innerHTML = "";
+        wordElements = [];
+        originalWordTexts = [];
+        
+        const words = ayat.split(/(\s+)/);
+        let wordIndex = 0;
+        
+        words.forEach(segment => {
+            if (segment.trim() === "") {
+                const spaceSpan = document.createElement('span');
+                spaceSpan.innerText = segment;
+                spaceSpan.style.whiteSpace = "pre";
+                container.appendChild(spaceSpan);
+                return;
+            }
+            
+            const subParts = segment.split(/([.,!?;:()\-])/);
+            subParts.forEach(part => {
+                if (part === "") return;
+                if (part.trim() === "" || /^[.,!?;:()\-]$/.test(part)) {
+                    const punctSpan = document.createElement('span');
+                    punctSpan.innerText = part;
+                    punctSpan.style.color = "#888";
+                    container.appendChild(punctSpan);
+                    return;
+                }
+                
+                const wordSpan = document.createElement('span');
+                wordSpan.innerText = part;
+                wordSpan.dataset.index = wordIndex;
+                wordSpan.style.cursor = "pointer";
+                wordSpan.style.display = "inline-block";
+                wordSpan.style.padding = "2px 4px";
+                wordSpan.style.margin = "0 1px";
+                wordSpan.style.borderRadius = "6px";
+                wordSpan.style.transition = "all 0.2s";
+                wordSpan.onclick = (function(idx) {
+                    return function() { toggleWordSelectionInline(idx); };
+                })(wordIndex);
+                
+                container.appendChild(wordSpan);
+                wordElements.push(wordSpan);
+                originalWordTexts.push(part);
+                wordIndex++;
+            });
+        });
+    }
+
+    function toggleWordSelectionInline(index) {
+        if (isSearchSubmitted) {
+            const feedback = document.getElementById('search-feedback');
+            feedback.innerHTML = "⚠️ Anda sudah menghantar jawapan. Sila tekan 'Reset Pilihan' untuk cuba semula.";
+            feedback.className = "search-feedback error show";
+            return;
+        }
+        
+        if (selectedWordIndices.has(index)) {
+            selectedWordIndices.delete(index);
+            wordElements[index].classList.remove('word-selected');
+            playSound('click');
+        } else {
+            selectedWordIndices.add(index);
+            wordElements[index].classList.add('word-selected');
+            playSound('click');
+        }
+        updateSearchStatsInline();
+    }
+
+    function resetSearchSelectionInline() {
+        if (isSearchSubmitted) {
+            isSearchSubmitted = false;
+            selectedWordIndices.clear();
+            wordElements.forEach((el, idx) => {
+                el.classList.remove('word-selected', 'word-correct-result', 'word-wrong-result', 'word-missed-result');
+                el.onclick = () => toggleWordSelectionInline(idx);
+            });
+            const submitBtn = document.getElementById('btn-submit-search');
+            if(submitBtn) {
+                submitBtn.innerText = "📤 HANTAR JAWAPAN";
+                submitBtn.style.background = "var(--neon-purple)";
+            }
+            const feedback = document.getElementById('search-feedback');
+            feedback.className = 'search-feedback';
+            feedback.style.display = 'none';
+            updateSearchStatsInline();
+            playSound('click');
+        } else {
+            selectedWordIndices.clear();
+            wordElements.forEach(el => {
+                el.classList.remove('word-selected');
+            });
+            updateSearchStatsInline();
+            playSound('click');
+        }
+    }
+
+    function updateSearchStatsInline() {
+        document.getElementById('selected-count').innerText = selectedWordIndices.size;
+        if (!isSearchSubmitted) {
+            document.getElementById('total-correct-count').innerText = "?";
+        }
+    }
+
+    function submitSearchAnswerInline() {
+        if (isSearchSubmitted) {
+            alert("Anda sudah menghantar jawapan. Tekan 'Reset Pilihan' untuk cuba semula.");
+            return;
+        }
+        
+        let correctSelections = 0;
+        let wrongSelections = 0;
+        let missedSelections = 0;
+        const correctWordsList = currentTopicWords.map(w => w.toLowerCase());
+        
+        const results = [];
+        
+        wordElements.forEach((el, idx) => {
+            const wordText = originalWordTexts[idx].toLowerCase().replace(/[.,!?;:()\-]/g, '');
+            const isCorrectWord = correctWordsList.includes(wordText);
+            const isSelected = selectedWordIndices.has(idx);
+            
+            if (isSelected && isCorrectWord) {
+                correctSelections++;
+                el.classList.add('word-correct-result');
+                el.classList.remove('word-selected');
+                results.push(`✅ "${originalWordTexts[idx]}" - BETUL`);
+            } else if (isSelected && !isCorrectWord) {
+                wrongSelections++;
+                el.classList.add('word-wrong-result');
+                el.classList.remove('word-selected');
+                results.push(`❌ "${originalWordTexts[idx]}" - SALAH (bukan kata ${activeTopic})`);
+            } else if (!isSelected && isCorrectWord) {
+                missedSelections++;
+                el.classList.add('word-missed-result');
+                results.push(`⚠️ "${originalWordTexts[idx]}" - TERLEPAS (anda tidak pilih)`);
+            }
+        });
+        
+        const totalCorrectWords = currentTopicWords.length;
+        const searchPoints = (correctSelections * 10) - (wrongSelections * 5);
+        const finalSearchScore = Math.max(0, searchPoints);
+        
+        if(currentMode === 'ujian') {
+            testScoreData.searchScore = finalSearchScore;
+            testScoreData.totalScore = (testScoreData.clickScore || 0) + (testScoreData.typingScore || 0) + finalSearchScore;
+        }
+        
+        const feedback = document.getElementById('search-feedback');
+        let feedbackHtml = `
+            <div style="text-align:left; max-height:200px; overflow-y:auto; padding:10px;">
+                <strong>📊 KEPUTUSAN CARIAN KATA:</strong><br>
+                ✅ Betul: ${correctSelections}/${totalCorrectWords}<br>
+                ❌ Salah: ${wrongSelections}<br>
+                ⚠️ Terlepas: ${missedSelections}<br>
+                🎯 Markah Carian: ${finalSearchScore}<br>
+                <hr>
+                <strong>🔍 SENARAI JAWAPAN:</strong><br>
+                ${results.map(r => `• ${r}`).join('<br>')}
+            </div>
+        `;
+        
+        if (correctSelections === totalCorrectWords && wrongSelections === 0) {
+            feedbackHtml = `<div style="text-align:center; padding:10px;">✅ SEMPURNA! Anda menemui semua ${totalCorrectWords} perkataan!<br>${feedbackHtml}</div>`;
+            feedback.className = "search-feedback success show";
+            playSound('complete');
+        } else {
+            feedback.className = "search-feedback error show";
+            playSound('complete');
+        }
+        
+        feedback.innerHTML = feedbackHtml;
+        feedback.style.display = 'block';
+        
+        isSearchSubmitted = true;
+        wordElements.forEach(el => { el.onclick = null; });
+        
+        const submitBtn = document.getElementById('btn-submit-search');
+        if(submitBtn) {
+            submitBtn.innerText = "✅ LIHAT KEPUTUSAN";
+            submitBtn.style.background = "#555";
+            submitBtn.onclick = null;
+        }
+        
+        document.getElementById('total-correct-count').innerText = `${correctSelections}/${totalCorrectWords}`;
+        
+        let finalTotalScore = 0;
+        if(currentMode === 'ujian') {
+            finalTotalScore = testScoreData.totalScore;
+        } else {
+            finalTotalScore = (currentScore * 10) + (typingPointsFromMemory || 0) + finalSearchScore;
+        }
+        
+        dataRecords.push({ 
+            name: currentUser, 
+            mode: currentMode, 
+            topic: activeTopic, 
+            score: finalTotalScore,
+            clickScore: currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10,
+            typingScore: currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0),
+            searchScore: finalSearchScore,
+            total: db[activeTopic].count, 
+            date: new Date().toLocaleString() 
+        });
+        syncRecords().catch(err => console.error("Gagal sync skor:", err));
+        renderLeaderboard();
+        
+        const resultHtml = `SKOR AKHIR: ${finalTotalScore}<br>
+        <small style="color:var(--neon-green)">🎯 Klik: ${currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10}</small><br>
+        <small style="color:var(--neon-blue)">⌨️ Menaip: ${currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0)}</small><br>
+        <small style="color:var(--neon-yellow)">🔍 Carian: ${finalSearchScore}</small><br>
+        <small style="color:var(--neon-purple)">📝 ${correctSelections}/${totalCorrectWords} perkataan betul ditemui</small>`;
+        
+        document.getElementById('score-text').innerHTML = resultHtml;
+        document.getElementById('quiz-flow-result').style.display = 'block';
+        
+        if(currentMode === 'ujian' && activeExam && currentTestIdx < activeExam.topics.length - 1) {
+            document.getElementById('btn-next-mission').style.display = 'block';
+            document.getElementById('btn-next-mission').onclick = () => {
+                document.getElementById('quiz-flow-search').style.display = 'none';
+                document.getElementById('quiz-flow-result').style.display = 'none';
+                nextTestTopic();
+            };
+        } else {
+            document.getElementById('btn-next-mission').style.display = 'none';
+        }
+    }
+    
+    function nextTestTopic() { 
+        currentTestIdx++; 
+        document.getElementById('quiz-flow-search').style.display = 'none';
+        if(activeExam && activeExam.topics[currentTestIdx]) {
+            openQuiz(activeExam.topics[currentTestIdx]); 
+        }
+    }
+
+    function exitQuiz() { 
+        clearInterval(timerInterval);
+        
+        const searchFlow = document.getElementById('quiz-flow-search');
+        if(searchFlow) searchFlow.style.display = 'none';
+        
+        const typingFlow = document.getElementById('quiz-flow-typing');
+        if(typingFlow) typingFlow.style.display = 'none';
+        
+        const gameFlow = document.getElementById('quiz-flow-game');
+        if(gameFlow) gameFlow.style.display = 'none';
+        
+        const verifFlow = document.getElementById('quiz-flow-verifikasi');
+        if(verifFlow) verifFlow.style.display = 'none';
+        
+        const resultFlow = document.getElementById('quiz-flow-result');
+        if(resultFlow) resultFlow.style.display = 'none';
+        
+        goHome(); 
+    }
+
+    // FUNGSI UNTUK MOD GURU
+    function renderTeacherTopics() {
+        const container = document.getElementById('teacher-topic-list');
+        if(!container) return;
+        container.innerHTML = "";
+        for(let t in db) {
+            const div = document.createElement('div'); 
+            div.className = "topic-opt"; 
+            div.innerText = t;
+            div.onclick = function() { this.classList.toggle('selected'); };
+            container.appendChild(div);
+        }
+    }
+
+    async function savePracticeSettings() {
+        const gTime = parseInt(document.getElementById('set-practice-game-time').value) || 30;
+        const tTime = parseInt(document.getElementById('set-practice-typing-time').value) || 45;
+        practiceConfig = { gameTime: gTime, typingTime: tTime };
+        await syncPracticeConfig();
+        alert("Tetapan Latihan Disimpan!");
+        playSound('click');
+    }
+
+    async function saveTestSettings() {
+        const topics = Array.from(document.querySelectorAll('.topic-opt.selected')).map(el => el.innerText);
+        const gameTime = parseInt(document.getElementById('set-test-time').value) || 30;
+        const typingTime = parseInt(document.getElementById('set-typing-time').value) || 45;
+        const pass = document.getElementById('set-test-pass').value.trim().toUpperCase();
+        const allowSkills = document.getElementById('set-allow-skills').value;
+
+        if(topics.length === 0 || !pass) return alert("Lengkapkan maklumat!");
+
+        const newConfig = { pass, topics, gameTime, typingTime, allowSkills };
+        const exists = multiTestConfig.findIndex(c => c.pass === pass);
+        if(exists > -1) multiTestConfig[exists] = newConfig; else multiTestConfig.push(newConfig);
+
+        await syncTests();
+        renderActiveTests();
+        alert("SET UJIAN AKTIF!");
+        playSound('complete');
+    }
+
+    function renderActiveTests() {
+        const container = document.getElementById('active-test-list');
+        if(!container) return; 
+        container.innerHTML = "";
+        multiTestConfig.forEach((conf, idx) => {
+            container.innerHTML += `
+                <div class="test-config-item">
+                    <div>
+                        <strong style="color:var(--neon-yellow)">KUNCI: ${conf.pass}</strong><br>
+                        <small>Masa Klik: ${conf.gameTime}s | Skill: ${conf.allowSkills === 'yes' ? 'ON' : 'OFF'}</small>
+                    </div>
+                    <button onclick="deleteTest(${idx})" style="background:var(--neon-red); border:none; color:white; padding:5px 10px; cursor:pointer;">HAPUS</button>
+                </div>`;
+        });
+    }
+
+    async function deleteTest(idx) { 
+        if(confirm("Hapus?")) { 
+            multiTestConfig.splice(idx, 1); 
+            await syncTests();
+            renderActiveTests(); 
+            playSound('click');
+        } 
+    }
+
+    async function resetLeaderboard() {
+        if(confirm("Adakah anda pasti ingin memadam semua rekod skor ejen?")) {
+            dataRecords = [];
+            await syncRecords();
+            alert("Leaderboard telah dikosongkan.");
+            renderLeaderboard();
+            playSound('click');
+        }
+    }
+
+    async function resetAllData() {
+        if(confirm("PERINGATAN: Semua data termasuk ujian aktif, skor, dan tetapan akan dipadamkan secara kekal!")) {
+            dataRecords = [];
+            multiTestConfig = [];
+            practiceConfig = { gameTime: 30, typingTime: 45 };
+
+            await Promise.all([
+                syncRecords(),
+                syncTests(),
+                syncPracticeConfig()
+            ]);
+
+            localStorage.removeItem('xpro_records');
+            localStorage.removeItem('xpro_multi_test');
+            localStorage.removeItem('xpro_practice_config');
+            location.reload();
+        }
+    }
+
+    function renderLeaderboard() {
+        const scores = {}; 
+        dataRecords.forEach(r => { scores[r.name] = (scores[r.name] || 0) + r.score; });
+        const sorted = Object.entries(scores).sort((a,b) => b[1] - a[1]).slice(0, 5);
+        const tbody = document.getElementById('leaderboard-body');
+        if(tbody) {
+            tbody.innerHTML = sorted.map((s, idx) => `<tr><td>#${idx+1}</td><td>${s[0]}</td><td>${s[1]}</td></tr>`).join('');
+        }
+    }
+
+    function renderAnalysis() {
+        const analysisDiv = document.getElementById('analysis-list');
+        if(analysisDiv) {
+            const totalScores = dataRecords.reduce((sum, r) => sum + r.score, 0);
+            const avgScore = dataRecords.length > 0 ? (totalScores / dataRecords.length).toFixed(2) : 0;
+            analysisDiv.innerHTML = `
+                <p style='color:#888'>📊 Statistik Keseluruhan:</p>
+                <p>📝 Jumlah Rekod: ${dataRecords.length}</p>
+                <p>⭐ Purata Skor: ${avgScore}</p>
+                <p>👥 Jumlah Ejen: ${[...new Set(dataRecords.map(r => r.name))].length}</p>
+            `;
+        }
+    }
+
+    // INITIALIZATION
+    window.onload = async function() { 
+        initAudio();
+        
+        // Pastikan dashboard kelihatan
+        const dashboard = document.getElementById('login-dashboard');
+        if(dashboard) {
+            dashboard.style.display = 'flex';
+        }
+        
+        // Pastikan container kelihatan
+        const container = document.querySelector('.container');
+        if(container) {
+            container.style.opacity = "1";
+        }
+        
+        // Sembunyikan stats header initially
+        document.getElementById('stats-header').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'none';
+        
+        // Pastikan elemen typing-input wujud
+        setTimeout(function() {
+            const typingInput = document.getElementById('typing-input');
+            if(typingInput) {
+                typingInput.style.opacity = "1";
+                typingInput.style.position = "relative";
+            }
+        }, 100);
+
+        await initCloudSync();
+    };
+</script>
+    
+</html>
