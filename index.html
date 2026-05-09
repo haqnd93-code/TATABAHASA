@@ -251,6 +251,47 @@
             box-shadow: 0 0 20px var(--neon-blue);
             transform: scale(1.02);
         }
+        #btn-next-mission.next-bottom-fixed {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 14px;
+            width: min(92vw, 460px) !important;
+            z-index: 10000;
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.45);
+            font-weight: 900;
+        }
+        body.has-next-fixed-padding {
+            padding-bottom: 92px;
+        }
+
+        .exam-participant-wrap {
+            margin-top: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .exam-participant-wrap h4 {
+            margin: 0 0 10px 0;
+            color: var(--neon-blue);
+            font-size: 0.95rem;
+        }
+        .exam-participant-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .exam-participant-pill {
+            background: #1f1f23;
+            border: 1px solid #3b3b45;
+            color: #d5d5dd;
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 0.8rem;
+        }
 
         .feedback-overlay {
             margin: 10px 0;
@@ -726,6 +767,10 @@
                     <thead><tr><th>RANK</th><th>EJEN</th><th>SKOR</th></tr></thead>
                     <tbody id="leaderboard-body"></tbody>
                 </table>
+                <div class="exam-participant-wrap">
+                    <h4>Peserta Mod Ujian (<span id="exam-participant-count">0</span>)</h4>
+                    <div id="exam-participant-list" class="exam-participant-list"></div>
+                </div>
             </div>
             <div class="hub-card" style="text-align:left;">
                 <h2 style="color: var(--neon-red);">⚠️ ANALISIS</h2>
@@ -1058,6 +1103,11 @@
     let originalWordTexts = [];
     let isSearchSubmitted = false;
     let typingPointsFromMemory = 0;
+    let typingPhaseFinalized = false;
+    let searchSubmissionInProgress = false;
+    let gameSelectionLocked = false;
+    let isNavigatingNextTopic = false;
+    let examAccumulatedScore = 0;
 
     // ======================== SISTEM LOGIN GURU & PELAJAR ========================
     window.currentUserRole = "";
@@ -1472,6 +1522,7 @@ function startSession(mode) {
         // Set ujian aktif
         activeExam = foundExam;
         currentTestIdx = 0;
+        examAccumulatedScore = 0;
         activeTopic = foundExam.topics[0];
         currentMode = mode;
         
@@ -1486,6 +1537,7 @@ function startSession(mode) {
     } else {
         // Mod latihan - seperti biasa
         activeExam = null;
+        examAccumulatedScore = 0;
         currentMode = mode;
         document.getElementById('mode-text').innerText = mode.toUpperCase();
         document.getElementById('mode-text').style.color = "white";
@@ -1530,9 +1582,10 @@ function startSession(mode) {
     document.getElementById('verif-statement').innerText = db[t].statement;
     document.getElementById('game-feedback').style.display = 'none';
     
-    if(currentMode === 'ujian') {
-        resetTestScore();
-    }
+    gameSelectionLocked = false;
+    typingPhaseFinalized = false;
+    searchSubmissionInProgress = false;
+    isNavigatingNextTopic = false;
 }
 
     function checkVerification(ans) {
@@ -1545,9 +1598,16 @@ function startSession(mode) {
     }
 
     function startPracticalGame() {
+        gameSelectionLocked = false;
         document.getElementById('quiz-flow-verifikasi').style.display = 'none';
         document.getElementById('quiz-flow-game').style.display = 'block';
         document.getElementById('quiz-title').innerText = activeTopic;
+        const submitBtn = document.getElementById('btn-submit');
+        if(submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.style.cursor = "pointer";
+            submitBtn.style.opacity = "1";
+        }
 
         const skillBox = document.getElementById('skill-box');
         if(currentMode === 'ujian' && activeExam && activeExam.allowSkills === 'yes') {
@@ -1628,6 +1688,16 @@ function startSession(mode) {
     }
 
     function processSelection() {
+        if(gameSelectionLocked) return;
+        gameSelectionLocked = true;
+        clearInterval(timerInterval);
+        const submitBtn = document.getElementById('btn-submit');
+        if(submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.style.cursor = "not-allowed";
+            submitBtn.style.opacity = "0.7";
+        }
+
         const boxes = document.querySelectorAll('.word-box');
         const correctAnswers = db[activeTopic].correct;
         let selectedCorrect = 0;
@@ -1703,8 +1773,21 @@ function startSession(mode) {
         if(el) el.innerText = `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`; 
     }
 
+    function focusTyping() {
+        const typingInput = document.getElementById('typing-input');
+        if(typingInput) typingInput.focus();
+    }
+
+    function handleTypingKeydown(e) {
+        if(e.key === 'Enter') {
+            e.preventDefault();
+            finishQuizWithScore(false);
+        }
+    }
+
     function startTypingModuleWithScore() {
         clearInterval(timerInterval);
+        typingPhaseFinalized = false;
         document.getElementById('quiz-flow-game').style.display = 'none';
         document.getElementById('quiz-flow-typing').style.display = 'block';
         
@@ -1741,9 +1824,19 @@ function startSession(mode) {
         typingInput.style.border = "1px solid var(--neon-blue)";
         typingInput.style.borderRadius = "8px";
         typingInput.style.marginTop = "15px";
+        typingInput.disabled = false;
         
         typingInput.removeEventListener('input', handleTypingWithScore);
         typingInput.addEventListener('input', handleTypingWithScore);
+        typingInput.removeEventListener('keydown', handleTypingKeydown);
+        typingInput.addEventListener('keydown', handleTypingKeydown);
+
+        const doneBtn = document.getElementById('btn-done-typing');
+        if(doneBtn) {
+            doneBtn.disabled = false;
+            doneBtn.style.cursor = "pointer";
+            doneBtn.style.opacity = "1";
+        }
         
         setTimeout(() => typingInput.focus(), 100);
         
@@ -1782,7 +1875,18 @@ function startSession(mode) {
     }
 
     function finishQuizWithScore(isPerfectTyping = false) {
+        if(typingPhaseFinalized) return;
+        typingPhaseFinalized = true;
         clearInterval(timerInterval);
+        const typingInput = document.getElementById('typing-input');
+        if(typingInput) typingInput.disabled = true;
+
+        const doneBtn = document.getElementById('btn-done-typing');
+        if(doneBtn) {
+            doneBtn.disabled = true;
+            doneBtn.style.cursor = "not-allowed";
+            doneBtn.style.opacity = "0.7";
+        }
         
         let typingPoints = 0;
         const typedText = document.getElementById('typing-input').value;
@@ -1814,6 +1918,7 @@ function startSession(mode) {
     function startWordSearchInline() {
         selectedWordIndices.clear();
         isSearchSubmitted = false;
+        searchSubmissionInProgress = false;
         wordElements = [];
         
         currentLongAyat = longAyatLib[activeTopic] || longAyatLib["Kata Adjektif"];
@@ -1834,26 +1939,26 @@ function startSession(mode) {
         // Pasang event handlers
         const submitBtn = document.getElementById('btn-submit-search');
         if(submitBtn) {
-            const newSubmitBtn = submitBtn.cloneNode(true);
-            submitBtn.parentNode.replaceChild(newSubmitBtn, submitBtn);
-            newSubmitBtn.id = "btn-submit-search";
-            newSubmitBtn.onclick = () => submitSearchAnswerInline();
+            submitBtn.innerText = "📤 HANTAR JAWAPAN";
+            submitBtn.style.background = "var(--neon-purple)";
+            submitBtn.disabled = false;
+            submitBtn.style.cursor = "pointer";
+            submitBtn.style.opacity = "1";
+            submitBtn.onclick = () => submitSearchAnswerInline();
         }
         
         const resetBtn = document.getElementById('btn-reset-search');
         if(resetBtn) {
-            const newResetBtn = resetBtn.cloneNode(true);
-            resetBtn.parentNode.replaceChild(newResetBtn, resetBtn);
-            newResetBtn.id = "btn-reset-search";
-            newResetBtn.onclick = () => resetSearchSelectionInline();
+            resetBtn.disabled = false;
+            resetBtn.style.cursor = "pointer";
+            resetBtn.onclick = () => resetSearchSelectionInline();
         }
         
         const exitBtn = document.getElementById('btn-exit-search');
         if(exitBtn) {
-            const newExitBtn = exitBtn.cloneNode(true);
-            exitBtn.parentNode.replaceChild(newExitBtn, exitBtn);
-            newExitBtn.id = "btn-exit-search";
-            newExitBtn.onclick = () => exitQuiz();
+            exitBtn.disabled = false;
+            exitBtn.style.cursor = "pointer";
+            exitBtn.onclick = () => exitQuiz();
         }
     }
 
@@ -1929,6 +2034,7 @@ function startSession(mode) {
     }
 
     function resetSearchSelectionInline() {
+        searchSubmissionInProgress = false;
         if (isSearchSubmitted) {
             isSearchSubmitted = false;
             selectedWordIndices.clear();
@@ -1940,6 +2046,9 @@ function startSession(mode) {
             if(submitBtn) {
                 submitBtn.innerText = "📤 HANTAR JAWAPAN";
                 submitBtn.style.background = "var(--neon-purple)";
+                submitBtn.disabled = false;
+                submitBtn.style.cursor = "pointer";
+                submitBtn.style.opacity = "1";
             }
             const feedback = document.getElementById('search-feedback');
             feedback.className = 'search-feedback';
@@ -1964,10 +2073,12 @@ function startSession(mode) {
     }
 
     function submitSearchAnswerInline() {
+    if (searchSubmissionInProgress) return;
     if (isSearchSubmitted) {
         alert("Anda sudah menghantar jawapan. Tekan 'Reset Pilihan' untuk cuba semula.");
         return;
     }
+    searchSubmissionInProgress = true;
     
     let correctSelections = 0;
     let wrongSelections = 0;
@@ -2127,6 +2238,7 @@ function startSession(mode) {
         submitBtn.style.background = "#555";
         submitBtn.disabled = true;
         submitBtn.style.cursor = "not-allowed";
+        submitBtn.style.opacity = "0.7";
     }
     
     document.getElementById('total-correct-count').innerText = `${correctSelections}/${totalCorrectWords}`;
@@ -2134,6 +2246,7 @@ function startSession(mode) {
     let finalTotalScore = 0;
     if(currentMode === 'ujian') {
         finalTotalScore = testScoreData.totalScore;
+        examAccumulatedScore += finalTotalScore;
     } else {
         finalTotalScore = (currentScore * 10) + (typingPointsFromMemory || 0) + finalSearchScore;
     }
@@ -2163,19 +2276,42 @@ function startSession(mode) {
     document.getElementById('quiz-flow-result').style.display = 'block';
     
     if(currentMode === 'ujian' && activeExam && currentTestIdx < activeExam.topics.length - 1) {
-        document.getElementById('btn-next-mission').style.display = 'block';
-        document.getElementById('btn-next-mission').onclick = () => {
+        const nextBtn = document.getElementById('btn-next-mission');
+        nextBtn.style.display = 'block';
+        nextBtn.classList.add('next-bottom-fixed');
+        document.body.classList.add('has-next-fixed-padding');
+        nextBtn.disabled = false;
+        nextBtn.style.cursor = "pointer";
+        nextBtn.style.opacity = "1";
+        nextBtn.onclick = () => {
+            if(isNavigatingNextTopic) return;
+            isNavigatingNextTopic = true;
+            nextBtn.disabled = true;
+            nextBtn.style.cursor = "not-allowed";
+            nextBtn.style.opacity = "0.7";
             document.getElementById('quiz-flow-search').style.display = 'none';
             document.getElementById('quiz-flow-result').style.display = 'none';
             nextTestTopic();
         };
     } else {
-        document.getElementById('btn-next-mission').style.display = 'none';
+        const nextBtn = document.getElementById('btn-next-mission');
+        nextBtn.style.display = 'none';
+        nextBtn.classList.remove('next-bottom-fixed');
+        document.body.classList.remove('has-next-fixed-padding');
+        nextBtn.disabled = false;
+        nextBtn.style.cursor = "pointer";
+        nextBtn.style.opacity = "1";
     }
+    searchSubmissionInProgress = false;
 }
     
-    function nextTestTopic() { 
+        function nextTestTopic() { 
+    if(isNavigatingNextTopic !== true) {
+        isNavigatingNextTopic = true;
+    }
+
     if(!activeExam) {
+        isNavigatingNextTopic = false;
         exitQuiz();
         return;
     }
@@ -2189,17 +2325,25 @@ function startSession(mode) {
         currentScore = 0;
         testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
         skillsUsed = { atk: false, def: false, bomb: false, x2: false };
+        searchSubmissionInProgress = false;
+        typingPhaseFinalized = false;
+        gameSelectionLocked = false;
+        isNavigatingNextTopic = false;
         
         openQuiz(activeExam.topics[currentTestIdx]);
     } else {
-        const totalUjianScore = testScoreData.totalScore;
-        alert(`🎉 TAHNIAH! Anda telah menamatkan semua ${activeExam.topics.length} topik ujian!\n\n🏆 JUMLAH SKOR UJIAN: ${totalUjianScore}\n\nTerima kasih kerana menjawab!`);
+        const totalUjianScore = examAccumulatedScore;
+        isNavigatingNextTopic = false;
+        alert(`TAHNIAH! Anda telah menamatkan semua ${activeExam.topics.length} topik ujian!\n\nJUMLAH SKOR UJIAN: ${totalUjianScore}\n\nTerima kasih kerana menjawab!`);
         exitQuiz();
     }
 }
-
     function exitQuiz() { 
         clearInterval(timerInterval);
+        typingPhaseFinalized = false;
+        searchSubmissionInProgress = false;
+        gameSelectionLocked = false;
+        isNavigatingNextTopic = false;
         
         const searchFlow = document.getElementById('quiz-flow-search');
         if(searchFlow) searchFlow.style.display = 'none';
@@ -2215,6 +2359,11 @@ function startSession(mode) {
         
         const resultFlow = document.getElementById('quiz-flow-result');
         if(resultFlow) resultFlow.style.display = 'none';
+        const nextBtn = document.getElementById('btn-next-mission');
+        if(nextBtn) {
+            nextBtn.classList.remove('next-bottom-fixed');
+        }
+        document.body.classList.remove('has-next-fixed-padding');
         
         goHome(); 
     }
@@ -2323,6 +2472,26 @@ function startSession(mode) {
         if(tbody) {
             tbody.innerHTML = sorted.map((s, idx) => `<tr><td>#${idx+1}</td><td>${s[0]}</td><td>${s[1]}</td></tr>`).join('');
         }
+
+        const examParticipantNames = [...new Set(
+            dataRecords
+                .filter(r => String(r.mode || '').toLowerCase() === 'ujian')
+                .map(r => String(r.name || '').trim())
+                .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, 'ms', { sensitivity: 'base' }));
+
+        const examList = document.getElementById('exam-participant-list');
+        const examCount = document.getElementById('exam-participant-count');
+        if(examCount) examCount.innerText = String(examParticipantNames.length);
+        if(examList) {
+            if(examParticipantNames.length === 0) {
+                examList.innerHTML = `<span style="color:#888; font-size:0.85rem;">Belum ada pelajar menyertai mod ujian.</span>`;
+            } else {
+                examList.innerHTML = examParticipantNames
+                    .map((name, idx) => `<span class="exam-participant-pill">${idx + 1}. ${name}</span>`)
+                    .join('');
+            }
+        }
     }
 
     function renderAnalysis() {
@@ -2373,3 +2542,7 @@ function startSession(mode) {
 </script>
     
 </html>
+
+
+
+
