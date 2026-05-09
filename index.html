@@ -1214,34 +1214,89 @@
 
     // FUNGSI UTAMA UNTUK BUTANG PELAJAR DAN GURU
     function selectUserType(type) {
-        const dashboard = document.getElementById('login-dashboard');
-        
-        if(type === 'student') {
-            // Sembunyikan dashboard
-            dashboard.style.display = 'none';
-            
-            // Set role pelajar dengan nama default "PELAJAR"
-            window.currentUserRole = "pelajar";
-            window.currentUserName = "PELAJAR";
-            window.currentUser = "PELAJAR";
-            
-            // Update header
-            document.getElementById('current-ejen-name').innerText = "PELAJAR";
-            document.getElementById('user-role-badge').innerHTML = "👨‍🎓 PELAJAR";
-            document.getElementById('stats-header').style.display = 'block';
-            document.getElementById('btn-logout').style.display = 'block';
-            
-            // Papar section home
-            showSection('home');
-            playSound('complete');
-        } 
-        else if(type === 'teacher') {
-            // Sembunyikan dashboard dahulu
-            dashboard.style.display = 'none';
-            // Papar popup login guru
-            showTeacherLoginPopup();
-        }
+    const dashboard = document.getElementById('login-dashboard');
+    
+    if(type === 'student') {
+        dashboard.style.display = 'none';
+        showStudentNamePopup();
+    } 
+    else if(type === 'teacher') {
+        dashboard.style.display = 'none';
+        showTeacherLoginPopup();
     }
+}
+
+function showStudentNamePopup() {
+    const popup = document.createElement('div');
+    popup.id = 'student-name-popup';
+    popup.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        backdrop-filter: blur(8px);
+    `;
+    popup.innerHTML = `
+        <div style="background: #16161a; border: 2px solid var(--neon-blue); border-radius: 30px; padding: 40px; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.3);">
+            <h2 style="color: var(--neon-blue); font-family: 'Orbitron';">👨‍🎓 MASUKKAN NAMA ANDA</h2>
+            <p style="color: #888; margin-bottom: 20px;">Sila masukkan nama anda untuk memulakan sesi latihan/ujian</p>
+            <input type="text" id="student-name-input" placeholder="Contoh: Ahmad bin Ali" style="width:100%; padding:15px; margin:10px 0; background:#000; border:1px solid var(--neon-blue); color:white; border-radius:10px;">
+            <div id="student-name-error" style="color:var(--neon-red); font-size:0.8rem; margin:10px 0; display:none;"></div>
+            <button onclick="processStudentName()" style="background: var(--neon-blue); color:black; border:none; padding:15px 30px; border-radius:10px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;">MULAKAN SESI</button>
+            <button onclick="closeStudentNamePopup()" style="background: #333; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer; width:100%; margin-top:10px;">BATAL</button>
+        </div>
+    `;
+    document.body.appendChild(popup);
+}
+
+function closeStudentNamePopup() {
+    const popup = document.getElementById('student-name-popup');
+    if(popup) popup.remove();
+    const dashboard = document.getElementById('login-dashboard');
+    dashboard.style.display = 'flex';
+}
+
+function processStudentName() {
+    const studentName = document.getElementById('student-name-input').value.trim();
+    const errorDiv = document.getElementById('student-name-error');
+    
+    if(studentName === "") {
+        errorDiv.innerText = "❌ Sila masukkan nama anda!";
+        errorDiv.style.display = "block";
+        return;
+    }
+    
+    if(studentName.length < 3) {
+        errorDiv.innerText = "❌ Nama terlalu pendek. Minimum 3 huruf.";
+        errorDiv.style.display = "block";
+        return;
+    }
+    
+    errorDiv.style.display = "none";
+    
+    const popup = document.getElementById('student-name-popup');
+    if(popup) popup.remove();
+    
+    window.currentUserRole = "pelajar";
+    window.currentUserName = studentName;
+    window.currentUser = studentName;
+    
+    document.getElementById('current-ejen-name').innerText = studentName;
+    document.getElementById('user-role-badge').innerHTML = "👨‍🎓 PELAJAR";
+    document.getElementById('stats-header').style.display = 'block';
+    document.getElementById('btn-logout').style.display = 'block';
+    
+    showSection('home');
+    playSound('complete');
+    
+    alert(`Selamat datang, ${studentName}! 🎉\n\nAnda kini boleh memulakan MOD LATIHAN atau MOD UJIAN.`);
+}
 
     function showTeacherLoginPopup() {
         // Buat popup login guru
@@ -1333,32 +1388,26 @@
 
     // FUNGSI LOG KELUAR
     function logoutSystem() {
-        if(confirm("Anda pasti ingin log keluar?")) {
-            // Reset semua variable
-            window.currentUserRole = "";
-            window.currentUserName = "";
-            window.currentUser = "";
-            currentMode = "latihan";
-            activeExam = null;
-            currentTestIdx = 0;
-            
-            // Hentikan timer jika sedang berjalan
-            if(timerInterval) clearInterval(timerInterval);
-            
-            // Sembunyikan stats header dan logout button
-            document.getElementById('stats-header').style.display = 'none';
-            document.getElementById('btn-logout').style.display = 'none';
-            
-            // Tunjukkan semula dashboard login
-            const dashboard = document.getElementById('login-dashboard');
-            dashboard.style.display = 'flex';
-            
-            // Reset ke section home
-            showSection('home');
-            
-            playSound('click');
-        }
+    if(confirm("Anda pasti ingin log keluar?")) {
+        window.currentUserRole = "";
+        window.currentUserName = "";
+        window.currentUser = "";
+        currentMode = "latihan";
+        activeExam = null;
+        currentTestIdx = 0;
+        
+        if(timerInterval) clearInterval(timerInterval);
+        
+        document.getElementById('stats-header').style.display = 'none';
+        document.getElementById('btn-logout').style.display = 'none';
+        
+        const dashboard = document.getElementById('login-dashboard');
+        dashboard.style.display = 'flex';
+        
+        showSection('home');
+        playSound('click');
     }
+}
 
     // FUNGSI NAVIGASI UTAMA
     function goHome() {
@@ -1390,6 +1439,59 @@
         document.getElementById('mode-text').innerText = mode.toUpperCase();
         showSection('pelajar-main');
     }
+// ======================== FUNGSI UNTUK MOD UJIAN (DENGAN KUNCI) ========================
+function startSession(mode) { 
+    if(window.currentUserRole !== "pelajar") {
+        alert("⚠️ Sila login sebagai PELAJAR terlebih dahulu!");
+        return;
+    }
+    
+    if(mode === 'ujian') {
+        // Minta kunci ujian daripada pelajar
+        const testKey = prompt("🔐 MASUKKAN KUNCI UJIAN:\n\nGuru akan memberikan kunci ini untuk mengakses ujian.", "");
+        
+        if(!testKey || testKey.trim() === "") {
+            alert("❌ Anda perlu memasukkan kunci ujian untuk mengakses Mod Ujian!");
+            return;
+        }
+        
+        // Cari ujian yang sepadan dengan kunci
+        const foundExam = multiTestConfig.find(cfg => cfg.pass === testKey.trim().toUpperCase());
+        
+        if(!foundExam) {
+            alert(`❌ Kunci "${testKey}" tidak sah!\n\nHubungi guru anda untuk mendapatkan kunci ujian yang betul.`);
+            // Tunjukkan senarai kunci yang ada (untuk debugging - boleh remove nanti)
+            if(multiTestConfig.length > 0) {
+                const availableKeys = multiTestConfig.map(c => c.pass).join(", ");
+                console.log("Kunci tersedia:", availableKeys);
+                alert(`📋 Kunci ujian aktif: ${availableKeys}`);
+            }
+            return;
+        }
+        
+        // Set ujian aktif
+        activeExam = foundExam;
+        currentTestIdx = 0;
+        activeTopic = foundExam.topics[0];
+        currentMode = mode;
+        
+        document.getElementById('mode-text').innerText = mode.toUpperCase();
+        document.getElementById('mode-text').style.color = "var(--neon-red)";
+        
+        alert(`✅ Ujian ditemui!\n\n📚 Topik: ${foundExam.topics.length} topik\n⏱️ Masa Klik: ${foundExam.gameTime}s\n⌨️ Masa Menaip: ${foundExam.typingTime}s\n⚡ Skill: ${foundExam.allowSkills === 'yes' ? 'DIBENARKAN' : 'DIS SEKAT'}\n\n🔑 Kunci: ${foundExam.pass}\n\nSELAMAT MENJAWAB!`);
+        
+        // Mulakan ujian dengan topik pertama
+        openQuiz(foundExam.topics[0]);
+        
+    } else {
+        // Mod latihan - seperti biasa
+        activeExam = null;
+        currentMode = mode;
+        document.getElementById('mode-text').innerText = mode.toUpperCase();
+        document.getElementById('mode-text').style.color = "white";
+        showSection('pelajar-main');
+    }
+}
     
     function renderTopics() {
         const grid = document.getElementById('topic-list'); 
@@ -1406,20 +1508,32 @@
     }
 
     function openQuiz(t) {
-        activeTopic = t; 
-        x2Active = false;
-        currentScore = 0;
-        testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
-        
-        showSection('quiz');
-        document.getElementById('quiz-flow-verifikasi').style.display = 'block';
-        document.getElementById('quiz-flow-game').style.display = 'none';
-        document.getElementById('quiz-flow-typing').style.display = 'none';
-        document.getElementById('quiz-flow-search').style.display = 'none';
-        document.getElementById('quiz-flow-result').style.display = 'none';
-        document.getElementById('verif-statement').innerText = db[t].statement;
-        document.getElementById('game-feedback').style.display = 'none';
+    activeTopic = t; 
+    x2Active = false;
+    currentScore = 0;
+    testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
+    skillsUsed = { atk: false, def: false, bomb: false, x2: false };
+    
+    if(currentMode === 'ujian' && activeExam) {
+        const topicIndex = activeExam.topics.findIndex(topic => topic === t);
+        if(topicIndex !== -1) {
+            currentTestIdx = topicIndex;
+        }
     }
+    
+    showSection('quiz');
+    document.getElementById('quiz-flow-verifikasi').style.display = 'block';
+    document.getElementById('quiz-flow-game').style.display = 'none';
+    document.getElementById('quiz-flow-typing').style.display = 'none';
+    document.getElementById('quiz-flow-search').style.display = 'none';
+    document.getElementById('quiz-flow-result').style.display = 'none';
+    document.getElementById('verif-statement').innerText = db[t].statement;
+    document.getElementById('game-feedback').style.display = 'none';
+    
+    if(currentMode === 'ujian') {
+        resetTestScore();
+    }
+}
 
     function checkVerification(ans) {
         if(ans === db[activeTopic].ans) startPracticalGame(); 
@@ -1850,136 +1964,239 @@
     }
 
     function submitSearchAnswerInline() {
-        if (isSearchSubmitted) {
-            alert("Anda sudah menghantar jawapan. Tekan 'Reset Pilihan' untuk cuba semula.");
-            return;
+    if (isSearchSubmitted) {
+        alert("Anda sudah menghantar jawapan. Tekan 'Reset Pilihan' untuk cuba semula.");
+        return;
+    }
+    
+    let correctSelections = 0;
+    let wrongSelections = 0;
+    let missedSelections = 0;
+    
+    // Fungsi untuk membersihkan perkataan
+    function cleanWord(word) {
+        let cleaned = word.toLowerCase().trim();
+        cleaned = cleaned.replace(/^[.,!?;:()\-'"]+/, '');
+        cleaned = cleaned.replace(/[.,!?;:()\-'"]+$/, '');
+        return cleaned;
+    }
+    
+    // ===== SENARAI LENGKAP PERKATAAN YANG TELAH DISAHKAN =====
+    const wordLists = {
+        "Kata Sendi Nama": ["pada","ke","dari","untuk","di","kepada"],
+        
+        "Kata Hubung": ["dan","tetapi","lalu","kerana","walaupun"],
+        
+        "Kata Tanya": ["siapakah","apakah","di manakah","bilakah","berapakah","mengapa","bagaimana"],
+        
+        "Kata Perintah": ["jangan","tolong","sila","usah","jemput","minta"],
+        
+        "Kata Bantu": ["akan","sedang","pernah","sudah","bolehkah","mesti"],
+        
+        "Kata Penguat": ["sangat","amat","paling","terlalu"],
+        
+        "Kata Penegas": ["dialah","apatah","pun","juga","lagipun","sesungguhnya"],
+        
+        "Kata Nafi": ["tidak","bukan"],
+        
+        "Kata Pemeri": ["ialah","adalah"],
+        
+        "Kata Pembenar": ["ya","benar","betul"],
+        
+        "Kata Arah": ["di bawah","di dalam","di hadapan","ke atas","di sebelah"],
+        
+        "Kata Bilangan": ["dua","semua","beberapa","setengah","para"],
+        
+        "Kata Adjektif": ["putih","besar","cantik","mewah","panas","baik","jujur","bertanggungjawab","sejuk","nyaman","baru","merah","laju","canggih","masin","pintar","bijak"]
+    };
+    
+    // Dapatkan senarai untuk topik semasa
+    const correctWordsList = wordLists[activeTopic] || [];
+    
+    // Fungsi untuk memeriksa sama ada perkataan betul
+    function isWordCorrect(word) {
+        let cleaned = cleanWord(word);
+        
+        // Padanan tepat
+        if (correctWordsList.includes(cleaned)) {
+            return true;
         }
         
-        let correctSelections = 0;
-        let wrongSelections = 0;
-        let missedSelections = 0;
-        const correctWordsList = currentTopicWords.map(w => w.toLowerCase());
+        // Untuk Kata Arah yang mempunyai 2 perkataan (contoh: "di bawah")
+        for (let correct of correctWordsList) {
+            if (correct.includes(" ") && word.toLowerCase().includes(correct)) {
+                return true;
+            }
+        }
         
-        const results = [];
+        return false;
+    }
+    
+    // Kira jumlah sebenar kata betul dalam ayat panjang
+    let totalCorrectInAyat = 0;
+    wordElements.forEach((el, idx) => {
+        let rawWord = originalWordTexts[idx];
+        if (isWordCorrect(rawWord)) {
+            totalCorrectInAyat++;
+        }
+    });
+    
+    // Proses setiap perkataan
+    const results = [];
+    wordElements.forEach((el, idx) => {
+        let rawWord = originalWordTexts[idx];
+        const isSelected = selectedWordIndices.has(idx);
+        const isCorrectWord = isWordCorrect(rawWord);
         
+        if (isSelected && isCorrectWord) {
+            correctSelections++;
+            el.classList.add('word-correct-result');
+            el.classList.remove('word-selected');
+            results.push(`✅ "${rawWord}" - BETUL`);
+        } 
+        else if (isSelected && !isCorrectWord) {
+            wrongSelections++;
+            el.classList.add('word-wrong-result');
+            el.classList.remove('word-selected');
+            results.push(`❌ "${rawWord}" - SALAH (bukan kata ${activeTopic})`);
+        } 
+        else if (!isSelected && isCorrectWord) {
+            missedSelections++;
+            el.classList.add('word-missed-result');
+            results.push(`⚠️ "${rawWord}" - TERLEPAS (anda tidak pilih)`);
+        }
+    });
+    
+    const totalCorrectWords = totalCorrectInAyat;
+    
+    const searchPoints = (correctSelections * 10) - (wrongSelections * 5);
+    const finalSearchScore = Math.max(0, searchPoints);
+    
+    if(currentMode === 'ujian') {
+        testScoreData.searchScore = finalSearchScore;
+        testScoreData.totalScore = (testScoreData.clickScore || 0) + (testScoreData.typingScore || 0) + finalSearchScore;
+    }
+    
+    const feedback = document.getElementById('search-feedback');
+    let feedbackHtml = `
+        <div style="text-align:left; max-height:300px; overflow-y:auto; padding:10px;">
+            <strong>📊 KEPUTUSAN CARIAN KATA (${activeTopic}):</strong><br>
+            ✅ Betul: ${correctSelections}/${totalCorrectWords}<br>
+            ❌ Salah: ${wrongSelections}<br>
+            ⚠️ Terlepas: ${missedSelections}<br>
+            🎯 Markah Carian: ${finalSearchScore}<br>
+            <hr>
+            <strong>🔍 SENARAI JAWAPAN:</strong><br>
+            ${results.map(r => `• ${r}`).join('<br>')}
+        </div>
+    `;
+    
+    if (correctSelections === totalCorrectWords && wrongSelections === 0 && totalCorrectWords > 0) {
+        feedbackHtml = `<div style="text-align:center; padding:10px;">✅ SEMPURNA! Anda menemui semua ${totalCorrectWords} perkataan!<br>${feedbackHtml}</div>`;
+        feedback.className = "search-feedback success show";
+        playSound('complete');
+    } else {
+        feedback.className = "search-feedback error show";
+        playSound('complete');
+        
+        const missedWordsList = [];
         wordElements.forEach((el, idx) => {
-            const wordText = originalWordTexts[idx].toLowerCase().replace(/[.,!?;:()\-]/g, '');
-            const isCorrectWord = correctWordsList.includes(wordText);
-            const isSelected = selectedWordIndices.has(idx);
-            
-            if (isSelected && isCorrectWord) {
-                correctSelections++;
-                el.classList.add('word-correct-result');
-                el.classList.remove('word-selected');
-                results.push(`✅ "${originalWordTexts[idx]}" - BETUL`);
-            } else if (isSelected && !isCorrectWord) {
-                wrongSelections++;
-                el.classList.add('word-wrong-result');
-                el.classList.remove('word-selected');
-                results.push(`❌ "${originalWordTexts[idx]}" - SALAH (bukan kata ${activeTopic})`);
-            } else if (!isSelected && isCorrectWord) {
-                missedSelections++;
-                el.classList.add('word-missed-result');
-                results.push(`⚠️ "${originalWordTexts[idx]}" - TERLEPAS (anda tidak pilih)`);
+            let rawWord = originalWordTexts[idx];
+            if (isWordCorrect(rawWord) && !selectedWordIndices.has(idx)) {
+                missedWordsList.push(rawWord);
             }
         });
         
-        const totalCorrectWords = currentTopicWords.length;
-        const searchPoints = (correctSelections * 10) - (wrongSelections * 5);
-        const finalSearchScore = Math.max(0, searchPoints);
-        
-        if(currentMode === 'ujian') {
-            testScoreData.searchScore = finalSearchScore;
-            testScoreData.totalScore = (testScoreData.clickScore || 0) + (testScoreData.typingScore || 0) + finalSearchScore;
+        if (missedWordsList.length > 0) {
+            feedbackHtml += `<div style="margin-top:10px; padding:8px; background:rgba(255,165,0,0.2); border-radius:8px;">
+                <strong>💡 Perkataan yang terlepas (perlu dipilih):</strong><br> ${missedWordsList.join(", ")}
+            </div>`;
         }
-        
-        const feedback = document.getElementById('search-feedback');
-        let feedbackHtml = `
-            <div style="text-align:left; max-height:200px; overflow-y:auto; padding:10px;">
-                <strong>📊 KEPUTUSAN CARIAN KATA:</strong><br>
-                ✅ Betul: ${correctSelections}/${totalCorrectWords}<br>
-                ❌ Salah: ${wrongSelections}<br>
-                ⚠️ Terlepas: ${missedSelections}<br>
-                🎯 Markah Carian: ${finalSearchScore}<br>
-                <hr>
-                <strong>🔍 SENARAI JAWAPAN:</strong><br>
-                ${results.map(r => `• ${r}`).join('<br>')}
-            </div>
-        `;
-        
-        if (correctSelections === totalCorrectWords && wrongSelections === 0) {
-            feedbackHtml = `<div style="text-align:center; padding:10px;">✅ SEMPURNA! Anda menemui semua ${totalCorrectWords} perkataan!<br>${feedbackHtml}</div>`;
-            feedback.className = "search-feedback success show";
-            playSound('complete');
-        } else {
-            feedback.className = "search-feedback error show";
-            playSound('complete');
-        }
-        
         feedback.innerHTML = feedbackHtml;
-        feedback.style.display = 'block';
-        
-        isSearchSubmitted = true;
-        wordElements.forEach(el => { el.onclick = null; });
-        
-        const submitBtn = document.getElementById('btn-submit-search');
-        if(submitBtn) {
-            submitBtn.innerText = "✅ LIHAT KEPUTUSAN";
-            submitBtn.style.background = "#555";
-            submitBtn.onclick = null;
-        }
-        
-        document.getElementById('total-correct-count').innerText = `${correctSelections}/${totalCorrectWords}`;
-        
-        let finalTotalScore = 0;
-        if(currentMode === 'ujian') {
-            finalTotalScore = testScoreData.totalScore;
-        } else {
-            finalTotalScore = (currentScore * 10) + (typingPointsFromMemory || 0) + finalSearchScore;
-        }
-        
-        dataRecords.push({ 
-            name: currentUser, 
-            mode: currentMode, 
-            topic: activeTopic, 
-            score: finalTotalScore,
-            clickScore: currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10,
-            typingScore: currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0),
-            searchScore: finalSearchScore,
-            total: db[activeTopic].count, 
-            date: new Date().toLocaleString() 
-        });
-        syncRecords().catch(err => console.error("Gagal sync skor:", err));
-        renderLeaderboard();
-        
-        const resultHtml = `SKOR AKHIR: ${finalTotalScore}<br>
-        <small style="color:var(--neon-green)">🎯 Klik: ${currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10}</small><br>
-        <small style="color:var(--neon-blue)">⌨️ Menaip: ${currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0)}</small><br>
-        <small style="color:var(--neon-yellow)">🔍 Carian: ${finalSearchScore}</small><br>
-        <small style="color:var(--neon-purple)">📝 ${correctSelections}/${totalCorrectWords} perkataan betul ditemui</small>`;
-        
-        document.getElementById('score-text').innerHTML = resultHtml;
-        document.getElementById('quiz-flow-result').style.display = 'block';
-        
-        if(currentMode === 'ujian' && activeExam && currentTestIdx < activeExam.topics.length - 1) {
-            document.getElementById('btn-next-mission').style.display = 'block';
-            document.getElementById('btn-next-mission').onclick = () => {
-                document.getElementById('quiz-flow-search').style.display = 'none';
-                document.getElementById('quiz-flow-result').style.display = 'none';
-                nextTestTopic();
-            };
-        } else {
-            document.getElementById('btn-next-mission').style.display = 'none';
-        }
     }
     
-    function nextTestTopic() { 
-        currentTestIdx++; 
-        document.getElementById('quiz-flow-search').style.display = 'none';
-        if(activeExam && activeExam.topics[currentTestIdx]) {
-            openQuiz(activeExam.topics[currentTestIdx]); 
-        }
+    feedback.innerHTML = feedbackHtml;
+    feedback.style.display = 'block';
+    
+    isSearchSubmitted = true;
+    wordElements.forEach(el => { el.onclick = null; });
+    
+    const submitBtn = document.getElementById('btn-submit-search');
+    if(submitBtn) {
+        submitBtn.innerText = "✅ LIHAT KEPUTUSAN";
+        submitBtn.style.background = "#555";
+        submitBtn.disabled = true;
+        submitBtn.style.cursor = "not-allowed";
     }
+    
+    document.getElementById('total-correct-count').innerText = `${correctSelections}/${totalCorrectWords}`;
+    
+    let finalTotalScore = 0;
+    if(currentMode === 'ujian') {
+        finalTotalScore = testScoreData.totalScore;
+    } else {
+        finalTotalScore = (currentScore * 10) + (typingPointsFromMemory || 0) + finalSearchScore;
+    }
+    
+    const recordName = window.currentUserName || window.currentUser || "PELAJAR";
+    dataRecords.push({ 
+        name: recordName, 
+        mode: currentMode, 
+        topic: activeTopic, 
+        score: finalTotalScore,
+        clickScore: currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10,
+        typingScore: currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0),
+        searchScore: finalSearchScore,
+        total: db[activeTopic].count, 
+        date: new Date().toLocaleString() 
+    });
+    syncRecords().catch(err => console.error("Gagal sync skor:", err));
+    renderLeaderboard();
+    
+    const resultHtml = `SKOR AKHIR: ${finalTotalScore}<br>
+    <small style="color:var(--neon-green)">🎯 Klik: ${currentMode === 'ujian' ? (testScoreData.clickScore || 0) : currentScore * 10}</small><br>
+    <small style="color:var(--neon-blue)">⌨️ Menaip: ${currentMode === 'ujian' ? (testScoreData.typingScore || 0) : (typingPointsFromMemory || 0)}</small><br>
+    <small style="color:var(--neon-yellow)">🔍 Carian: ${finalSearchScore}</small><br>
+    <small style="color:var(--neon-purple)">📝 ${correctSelections}/${totalCorrectWords} perkataan betul ditemui</small>`;
+    
+    document.getElementById('score-text').innerHTML = resultHtml;
+    document.getElementById('quiz-flow-result').style.display = 'block';
+    
+    if(currentMode === 'ujian' && activeExam && currentTestIdx < activeExam.topics.length - 1) {
+        document.getElementById('btn-next-mission').style.display = 'block';
+        document.getElementById('btn-next-mission').onclick = () => {
+            document.getElementById('quiz-flow-search').style.display = 'none';
+            document.getElementById('quiz-flow-result').style.display = 'none';
+            nextTestTopic();
+        };
+    } else {
+        document.getElementById('btn-next-mission').style.display = 'none';
+    }
+}
+    
+    function nextTestTopic() { 
+    if(!activeExam) {
+        exitQuiz();
+        return;
+    }
+    
+    currentTestIdx++; 
+    document.getElementById('quiz-flow-search').style.display = 'none';
+    document.getElementById('quiz-flow-result').style.display = 'none';
+    
+    if(activeExam && activeExam.topics[currentTestIdx]) {
+        x2Active = false;
+        currentScore = 0;
+        testScoreData = { clickScore: 0, typingScore: 0, searchScore: 0, totalScore: 0 };
+        skillsUsed = { atk: false, def: false, bomb: false, x2: false };
+        
+        openQuiz(activeExam.topics[currentTestIdx]);
+    } else {
+        const totalUjianScore = testScoreData.totalScore;
+        alert(`🎉 TAHNIAH! Anda telah menamatkan semua ${activeExam.topics.length} topik ujian!\n\n🏆 JUMLAH SKOR UJIAN: ${totalUjianScore}\n\nTerima kasih kerana menjawab!`);
+        exitQuiz();
+    }
+}
 
     function exitQuiz() { 
         clearInterval(timerInterval);
